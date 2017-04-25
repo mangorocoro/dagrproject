@@ -74,11 +74,23 @@ WSGI_APPLICATION = 'dagr.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-
+'''
+--old default--
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+'''
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'dagrbase',
+        'USER': 'dagruser',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
