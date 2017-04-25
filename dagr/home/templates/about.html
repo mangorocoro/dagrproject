@@ -11,7 +11,7 @@
     {% block pagecontent %}
     <h1 align="center">About</h1>
 
-    <a href="{% url 'home' %}">Home Page</a>
+    {% include 'partials/nav-bar.html' %}
     {% endblock %}
 </body>
 </html>
