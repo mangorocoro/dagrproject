@@ -1,13 +1,18 @@
+<!-- dagr/home/templates/index.html-->
+{% extends 'base.html' %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DAGR Project</title>
+    <title>{% block title %}Home{% endblock %}</title>
 </head>
 <body>
+    {% block pagecontent %}
     <h1 align="center">DAGR Project</h1>
     <h2 align="center">Daniel Hwang, Charles Stephens</h2>
 
     <a href="{% url 'about' %}">About Page</a>
+    {% endblock %}
 </body>
 </html>

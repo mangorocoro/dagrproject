@@ -8,6 +8,6 @@ class HomePageView(TemplateView):
         return render(request, 'index.html', context=None)
     '''
     template_name = 'index.html'
-    
+
 class AboutPageView(TemplateView):
     template_name = 'about.html'

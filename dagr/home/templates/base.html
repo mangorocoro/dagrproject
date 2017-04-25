@@ -1,0 +1,18 @@
+<!-- dagr/home/templates/base.html-->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DAGR Project - {% block title %}{% endblock %}</title>
+
+    <script src="{%static 'js/main.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/main.css'%}" type="text/css" />
+</head>
+<body>
+    <div class="container">
+        {% block pagecontent %}
+        {% endblock %}
+    </div>
+</body>
+</html>

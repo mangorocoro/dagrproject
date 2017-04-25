@@ -1,13 +1,17 @@
+<!-- dagr/home/templates/about.html-->
+{% extends 'base.html' %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>About</title>
+    <title>{% block title %}About{% endblock %}</title>
 </head>
 <body>
+    {% block pagecontent %}
     <h1 align="center">About</h1>
 
     <a href="{% url 'home' %}">Home Page</a>
-
+    {% endblock %}
 </body>
 </html>
