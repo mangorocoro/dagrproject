@@ -90,15 +90,22 @@ DATABASES = {
         'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '',
+        
+        'OPTIONS': {
+            'read_default_file': '/home/dan/djangoprojects/dagrproject/dagr/dagr/my.cnf',
+        },
+        
 
 
 '''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'read_default_file': '/home/dan/djangoprojects/dagrproject/dagr/dagr/my.cnf',
-        },
+        'NAME': 'dagrbase',
+        'USER': 'dagruser',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
