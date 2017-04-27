@@ -1,18 +1,20 @@
 /* W3.CSS 4.04 Apr 2017 by Jan Egil and Borge Refsnes */
 .homepage-splash {
     margin: 10px;
-    width: 90%;
+    width: 100%;
     height: 100vh;
     background: url('../images/metadata.jpg');
     background-size: cover;
     position: relative;
     border-radius: 15px;
+    text-align:center;
 }
 
 .homepage-title {
     position: absolute;
     bottom: 90vh;
-    left: 5vh;
+    left: 20vh;
+    right: 20vh;
     background: rgba(0, 0, 0, 0.75);
     padding: 4px 8px;
     color: white;
@@ -23,8 +25,9 @@
 
 .homepage-authors {
     position: absolute;
-    bottom: 10vh;
-    left: 5vh;
+    bottom: 5vh;
+    left: 30vh;
+    right: 30vh;
     background: rgba(0, 0, 0, 0.75);
     padding: 4px 8px;
     color: white;
@@ -34,8 +37,10 @@
 }
 
 .base-body {
-    background-color: #c0dfd9;
+    background-color: #d2e9ff;
 }
+
+
 
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
 /* Extract from normalize.css by Nicolas Gallagher and Jonathan Neal git.io/normalize */
@@ -207,7 +212,8 @@ hr{border:0;border-top:1px solid #eee;margin:20px 0}
 .w3-white,.w3-hover-white:hover{color:#000!important;background-color:#fff!important}
 .w3-black,.w3-hover-black:hover{color:#fff!important;background-color:#000!important}
 .w3-grey,.w3-hover-grey:hover,.w3-gray,.w3-hover-gray:hover{color:#000!important;background-color:#bbb!important}
-.w3-light-grey,.w3-hover-light-grey:hover,.w3-light-gray,.w3-hover-light-gray:hover{color:#000!important;background-color:#f1f1f1!important}
+.w3-light-grey,.w3-hover-light-grey:hover,.w3-light-gray,.w3-hover-light-gray:hover{color:#000!important;background-color:#b3c2bf!important}
+.w3-navbar,.w3-hover-light-grey:hover,.w3-light-gray,.w3-hover-light-gray:hover{color:#000!important;background-color:#ffe3d2!important}
 .w3-dark-grey,.w3-hover-dark-grey:hover,.w3-dark-gray,.w3-hover-dark-gray:hover{color:#fff!important;background-color:#616161!important}
 .w3-pale-red,.w3-hover-pale-red:hover{color:#000!important;background-color:#ffdddd!important}
 .w3-pale-green,.w3-hover-pale-green:hover{color:#000!important;background-color:#ddffdd!important}
