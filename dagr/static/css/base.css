@@ -1,4 +1,42 @@
 /* W3.CSS 4.04 Apr 2017 by Jan Egil and Borge Refsnes */
+.homepage-splash {
+    margin: 10px;
+    width: 90%;
+    height: 100vh;
+    background: url('../images/metadata.jpg');
+    background-size: cover;
+    position: relative;
+    border-radius: 15px;
+}
+
+.homepage-title {
+    position: absolute;
+    bottom: 90vh;
+    left: 5vh;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 4px 8px;
+    color: white;
+    margin: 0 auto;
+    font: 60px Sans-Serif;
+    border-radius: 15px;
+}
+
+.homepage-authors {
+    position: absolute;
+    bottom: 10vh;
+    left: 5vh;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 4px 8px;
+    color: white;
+    margin: 0;
+    font: 50px Sans-Serif;
+    border-radius: 15px;
+}
+
+.base-body {
+    background-color: #c0dfd9;
+}
+
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
 /* Extract from normalize.css by Nicolas Gallagher and Jonathan Neal git.io/normalize */
 html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}

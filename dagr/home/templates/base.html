@@ -10,12 +10,16 @@
 
 
 </head>
-<body>
+<body class="base-body">
     <div class="container">
         {% include 'partials/side-navbar.html' %}
-        <div style="margin-left:15%"> <!-- move the content over 15% because the sidebar is 15% wide -->
+        <div style="margin-left:15%"><!-- move the content over 15% because the sidebar is 15% wide -->
         {% block pagecontent %}
+
         {% endblock %}
+
+        </div>
+
     </div>
 
 </body>
