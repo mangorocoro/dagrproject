@@ -6,6 +6,26 @@
     <title>{% block title %}HTML Parser{% endblock %}</title>
 </head>
 <body>
+    {% block pagecontent %}
+    <h1 align="center">Type in URL</h1>
+
+
+
+    <div class="w3-container">
+        <form action="/urlparser/" method="GET">
+            URL: <br>
+            <input type="text" name="url">
+            <br/>
+            <input type="submit" value="submit" />
+    </form>
+
+
+    </div>
+
+
+
+    {% endblock %}
+
 
 </body>
 </html>

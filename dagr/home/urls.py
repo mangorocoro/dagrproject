@@ -17,5 +17,6 @@ urlpatterns = [
     url(r'^reach/$', views.ReachPageView.as_view(), name='reach'),
     url(r'^timerange/$', views.TimeRangePageView.as_view(), name='timerange'),
     url(r'^success/$', views.SuccessView.as_view(), name='success'),
-    url(r'^upload/$', views.upload, name='upload')
+    url(r'^upload/$', views.upload, name='upload'),
+    url(r'^urlparser/$', views.urlParser, name='urlparser'),
 ]

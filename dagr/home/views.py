@@ -10,6 +10,8 @@ import MySQLdb
 import uuid
 from subprocess import call
 import subprocess
+import metadata_parser
+
 
 
 class HomePageView(TemplateView):
@@ -42,6 +44,12 @@ class InsertPageView(TemplateView):
 
 def upload(request):
     if request.method == 'POST':
+        '''
+        print("request.META = {}".format(request.META))
+        for ele in request.META:
+            print("{} = {}".format(ele, request.META[ele]))
+        '''
+
         file = request.FILES['file']
         filename = str(file)
         fd = os.open(str(file), os.O_RDWR|os.O_CREAT)
@@ -117,6 +125,48 @@ def handle_uploaded_file(file, filename):
     with open('upload/' + filename, 'wb+') as destination:
         for chunk in file.chunks():
             destination.write(chunk)
+
+
+def urlParser(request):
+    if request.method == "GET":
+        url = request.GET.get('url')
+        # if first 7 or 8 chars are not http:// or https:// append it
+        http = "http://"
+        https = "https://"
+        if not url.startswith(http) or not url.startswith(https):
+            url = http + url
+
+        print("url = {}".format(url))
+        page = metadata_parser.MetadataParser(url=url, search_head_only=False)
+
+        title = page.get_metadata('title')
+        description = page.get_metadata('description')
+        id = uuid.uuid4()
+
+        date = page.get_metadata('pubdate')
+        print("date = {}".format(date))
+
+
+    return HttpResponseRedirect(reverse('success'))
+
+
+'''
+    url = 'http://www.cnn.com'
+    page = metadata_parser.MetadataParser(url=url)
+    print(page.metadata)
+    print("\n\n")
+    print("URL title:", page.get_metadata('title'))
+    print("\n\n")
+    date = page.get_metadata('pubdate')
+    date = date[:10] + " " + date[11:len(date) - 1]
+    print("URL publish date:", date)
+    print("\n\n")
+    print("URL description:", page.get_metadata('description'))
+    print("\n\n")
+    id = uuid.uuid4()
+    x.execute("""SELECT * FROM DAGR""")
+
+'''
 
 class SuccessView(TemplateView):
     template_name = 'success.html'
