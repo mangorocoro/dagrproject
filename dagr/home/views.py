@@ -11,6 +11,8 @@ import uuid
 from subprocess import call
 import subprocess
 import metadata_parser
+from bs4 import BeautifulSoup
+import urllib
 
 
 
@@ -138,35 +140,25 @@ def urlParser(request):
 
         print("url = {}".format(url))
         page = metadata_parser.MetadataParser(url=url, search_head_only=False)
+        print("page = {}".format(page.metadata))
+
 
         title = page.get_metadata('title')
+
         description = page.get_metadata('description')
+
         id = uuid.uuid4()
 
         date = page.get_metadata('pubdate')
-        print("date = {}".format(date))
 
+        date = date[:10] + " " + date[11:len(date) - 1]
+
+        last_modified = page.get_metadata('lastmod')
+
+        last_modified = date[:10] + " " + date[11:len(date) - 1]
 
     return HttpResponseRedirect(reverse('success'))
 
-
-'''
-    url = 'http://www.cnn.com'
-    page = metadata_parser.MetadataParser(url=url)
-    print(page.metadata)
-    print("\n\n")
-    print("URL title:", page.get_metadata('title'))
-    print("\n\n")
-    date = page.get_metadata('pubdate')
-    date = date[:10] + " " + date[11:len(date) - 1]
-    print("URL publish date:", date)
-    print("\n\n")
-    print("URL description:", page.get_metadata('description'))
-    print("\n\n")
-    id = uuid.uuid4()
-    x.execute("""SELECT * FROM DAGR""")
-
-'''
 
 class SuccessView(TemplateView):
     template_name = 'success.html'
