@@ -43,31 +43,47 @@ class InsertPageView(TemplateView):
 def upload(request):
     if request.method == 'POST':
         file = request.FILES['file']
+        filename = str(file)
         fd = os.open(str(file), os.O_RDWR|os.O_CREAT)
-        
-        handle_uploaded_file(file, str(file))
+
+        handle_uploaded_file(file, filename)
+
+        # after file is uploaded get the data
+        # this is currently giving me data on the copied file instance not the original file
+        # need to find a way to get access to the original file on disk
+        # find a way to know the directory name from where the file came from...
+        lsresults = subprocess.check_output(["ls", "upload"]).decode("utf-8")
+        print("lsresults = {}".format(lsresults))
+
+        owner = subprocess.check_output(["stat", "-c", "'%U'", filename]).decode("utf-8")
+        print("owner = {}".format(owner))
+
+        byte_size = subprocess.check_output(["stat", "-c", "'%s'", filename]).decode("utf-8")
+        print("size = {}".format(byte_size))
+
+        last_access = subprocess.check_output(["stat", "-c", "'%x'", filename]).decode("utf-8")
+        print("last_access = {}".format(last_access))
+
+        last_data_modification = subprocess.check_output(["stat", "-c", "'%y'", filename]).decode("utf-8")
+        print("last_data_modification = {}".format(last_data_modification))
+
+        last_status_change = subprocess.check_output(["stat", "-c", "'%z'", filename]).decode("utf-8")
+        print("last_status_change = {}".format(last_status_change))
+
+
+
+
+
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")
 
 
 def handle_uploaded_file(file, filename):
-    print("file is {} and filename is {}".format(file, filename))
-    '''
-    conn = MySQLdb.connect(host="localhost",
-                           user="root",
-                           passwd="p",
-                           db="Documents")
-    x = conn.cursor()
-    '''
-    #file = "/home/ryan/Desktop/docParser.py"
-    #temp = filepath.split("/")
-    #title = temp[len(temp) - 1]
-    #print title
-    #print "file storage path:", file
 
-    localpath = subprocess.check_output(["realpath", filename])
-    print("localpath = {}".format(localpath ))
+    localpath = subprocess.check_output(["realpath", filename]).decode("utf-8")
+    print("localpath = {}".format(localpath))
+
 
     try:
         st = os.stat(filename)
@@ -94,15 +110,6 @@ def handle_uploaded_file(file, filename):
 
     id = uuid.uuid4()
 
-    '''
-    x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """,
-              (str(id), title, file, size, creDate, creator, ' '))
-    conn.commit()
-    x.execute("""SELECT * FROM DAGR""")
-    for row in x:
-        print(row)
-    conn.close()
-    '''
 
     if not os.path.exists('upload/'):
         os.mkdir('upload/')
