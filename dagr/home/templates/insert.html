@@ -7,6 +7,17 @@
 </head>
 <body>
 
+    {% block pagecontent %}
+    <h1 align="center">Insert Local File</h1>
+    <div class="w3-container">
+
+    <form action="/upload/" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="file"/>
+        <br/>
+        <input type="submit" value="Upload File" />
+    </form>
+    {% endblock %}
 
 </body>
 </html>

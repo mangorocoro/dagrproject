@@ -26,3 +26,6 @@ class Keywords(models.Model):
 
     def __str__(self):
         return self.docID + " - " + self.keywords
+
+class Document(models.Model):
+    docfile = models.FileField()
