@@ -7,5 +7,30 @@
 </head>
 <body>
 
+    {% block pagecontent %}
+    <h1 align="center">Choose a Time Range</h1>
+    <div class="w3-container">
+        <input type="text" name="daterange" value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM" />
+
+        <script type="text/javascript">
+            $(function() {
+                $('input[name="daterange"]').daterangepicker({
+                    timePicker: true,
+                    timePickerIncrement: 30,
+                    locale: {
+                        format: 'MM/DD/YYYY h:mm A'
+                    }
+                });
+            });
+        </script>
+
+    </div>
+
+
+
+
+    {% endblock %}
+
+
 </body>
 </html>

@@ -6,12 +6,21 @@
     <meta charset="UTF-8">
     <title>DAGR Project - {% block title %}{% endblock %}</title>
 
+    <link rel="stylesheet" type="text/css" href="{%static 'css/bootstrap.css' %}" />
     <link rel="stylesheet" type="text/css" href="{%static 'css/base.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{%static 'css/daterangepicker.css' %}" />
+
+
+
+    <script type="text/javascript" src=" {% static 'js/jquery.min.js' %}"></script>
+    <script type="text/javascript" src=" {% static 'js/moment.min.js' %}"></script>
+    <script type="text/javascript" src=" {% static 'js/daterangepicker.js' %}"></script>
+
 
 
 </head>
 <body class="base-body">
-    <div class="container">
+    <div class="base-container">
         {% include 'partials/side-navbar.html' %}
         <div style="margin-left:15%"><!-- move the content over 15% because the sidebar is 15% wide -->
         {% block pagecontent %}
