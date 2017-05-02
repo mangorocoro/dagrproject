@@ -46,6 +46,7 @@ class InsertPageView(TemplateView):
 
 def upload(request):
     if request.method == 'POST':
+
         '''
         print("request.META = {}".format(request.META))
         for ele in request.META:
@@ -53,6 +54,9 @@ def upload(request):
         '''
 
         file = request.FILES['file']
+        size = request.POST['size']
+        print("file size is = {}".format(size))
+
         filename = str(file)
         fd = os.open(str(file), os.O_RDWR|os.O_CREAT)
 
@@ -70,6 +74,9 @@ def upload(request):
 
         byte_size = subprocess.check_output(["stat", "-c", "'%s'", filename]).decode("utf-8")
         print("size = {}".format(byte_size))
+
+
+
 
         last_access = subprocess.check_output(["stat", "-c", "'%x'", filename]).decode("utf-8")
         print("last_access = {}".format(last_access))
@@ -129,6 +136,9 @@ def handle_uploaded_file(file, filename):
             destination.write(chunk)
 
 
+
+
+
 def urlParser(request):
     if request.method == "GET":
         url = request.GET.get('url')
@@ -158,6 +168,18 @@ def urlParser(request):
         last_modified = date[:10] + " " + date[11:len(date) - 1]
 
     return HttpResponseRedirect(reverse('success'))
+
+def metadataquery(request):
+    if request == "POST":
+        # get the search terms, None if nothing entered
+        guid = str(request.FILES['guid'])
+        path = str(request.FILES['path'])
+        creationtime = str(request.FILES['creationtime'])
+        modtime = str(request.FILES['modtime'])
+        author = str(request.FILES['author'])
+        size = str(request.FILES['size'])
+        date = str(request.FILES['date'])
+        name = str(request.FILES['name'])
 
 
 class SuccessView(TemplateView):
