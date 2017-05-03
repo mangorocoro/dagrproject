@@ -19,5 +19,5 @@ urlpatterns = [
     url(r'^success/$', views.SuccessView.as_view(), name='success'),
     url(r'^upload/$', views.upload, name='upload'),
     url(r'^urlparser/$', views.urlParser, name='urlparser'),
-    url(r'^metadataquery/', views.metadataquery, name='metadataquery'),
+    url(r'^metadataqueryresults/$', views.metadataqueryresults, name='metadataqueryresults'),
 ]

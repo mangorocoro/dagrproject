@@ -220,24 +220,50 @@ def urlParser(request):
 
     return HttpResponseRedirect(reverse('success'))
 
-def metadataquery(request):
-    if request == "POST":
+
+
+
+def metadataqueryresults(request):
+    print("AM I EVEN HERE?")
+    if request.method == "POST":
         # get the search terms, None if nothing entered
-        guid = str(request.FILES['guid'])
-        path = str(request.FILES['path'])
-        creationtime = str(request.FILES['creationtime'])
-        modtime = str(request.FILES['modtime'])
-        author = str(request.FILES['author'])
-        size = str(request.FILES['size'])
-        date = str(request.FILES['date'])
-        name = str(request.FILES['name'])
+        print("IM A POST LIKE IM SUPPOSED TO BE")
+        print("request.POST = {}".format(request.POST))
+
+        guid = str(request.POST.get('guid'))
+
+        name = str(request.POST.get('name'))
+        category = str(request.POST.get('category'))
+        path = str(request.POST.get('path'))
+        size = str(request.POST.get('size'))
+        creationtime = str(request.POST.get('creationtime'))
+        creator = str(request.POST.get('creator'))
+        modtime = str(request.POST.get('modtime'))
+        date = str(request.POST.get('date'))
+
+        print("guid = {}".format(guid))
+        print("name = {}".format(name))
+        print("category = {}".format(category))
+        print("path = {}".format(path))
+        print("size = {}".format(size))
+        print("creationtime = {}".format(creationtime))
+        print("creator = {}".format(creator))
+        print("modtime = {}".format(modtime))
+        print("date = {}".format(date))
+
+
+
+        return HttpResponseRedirect(reverse('success'))
+    return HttpResponse("Failed")
 
 
 class SuccessView(TemplateView):
     template_name = 'success.html'
 
 class MetadataQueryPageView(TemplateView):
+    print("why am i here?")
     template_name = 'metadataquery.html'
+
 
 class ModifyPageView(TemplateView):
     template_name = 'modify.html'

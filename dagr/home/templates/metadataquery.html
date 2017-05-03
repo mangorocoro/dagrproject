@@ -10,30 +10,42 @@
     {% block pagecontent %}
     <h1 align="center">Metadata Query</h1>
     <div class="w3-container">
-        <form action="/metadataquery/" method="POST" enctype="multipart/form-data">
+        <form action="/metadataqueryresults/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            GUID <input type="text" name="guid"/>
+            <label for="guid">GUID: </label>
+            <input id="guid" type="text" name="guid" />
             <br/>
 
-            File Name <input type="text" name=name"/>
+            <label for="name">Name: </label>
+            <input id="name" type="text" name="name"/>
             <br/>
 
-            Path <input type="text" name="path"/>
+            <label for="category">Category: </label>
+            <input id="category" type="text" name=name"/>
             <br/>
 
-            Size in Bytes <input type="text" name="size"/>
+            <label for="path">Path: </label>
+            <input id="path" type="text" name="path"/>
             <br/>
 
-            Creation Time <input type="text" name="creationtime"/>
+            <label for="size">Size in Bytes: </label>
+            <input id="size" type="text" name="size"/>
             <br/>
 
-            Creator <input type="text" name="creator"/>
+            <label for="creationtime">Creation Time: </label>
+            <input id="creationtime" type="datetime-local" name="creationtime"/>
             <br/>
 
-            Modification Time <input type="text" name="modtime"/>
+            <label for="creator">Creator: </label>
+            <input id="creator" type="text" name="creator"/>
             <br/>
 
-            Date <input type="text" name="date"/>
+            <label for="modtime">Modification Time: </label>
+            <input id="modtime" type="datetime-local" name="modtime"/>
+            <br/>
+
+            <label for="date">Date: </label>
+            <input id="date" type="text" name="date"/>
             <br/>
 
             <input type="submit" value="Submit" />
@@ -41,13 +53,30 @@
 
         <script type="text/javascript">
         $(document).ready(function() {
-          $(".js-example-basic-single").select2();
+          $(".js-example-basic-single").select2({
+              data : [
+                  {
+                      id: 'value',
+                      text: 'text to display'
+                  },
+              ]
+          });
         });
+
+        function rangeorexact() {
+            if (document.getElementById('range').checked) {
+                document.getElementById('ifRange').style.display = 'block';
+            } else if (document.getElementsById('greaterthan').checked) {
+                document.getElementById('ifGreater').style.display = 'block';
+            } else if (document.getElementById('ifLess').checked) {
+                document.getElementById('ifLess').style.display = 'block';
+            }
+            else document.getElementById('ifRange').style.display = 'none';
+        }
         </script>
 
         <select class="js-example-basic-single">
             <option value="dagr1">DAGR 1</option>
-            ...
             <option value="dagr2">DAGR 2</option>
             <option value="dagr3">DAGR 3</option>
         </select>
@@ -56,7 +85,31 @@
 
         Choose Any Child DAGRs
 
+        <br/>
+
+
+
+        Exact <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="exact" checked="checked">
+        Range <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="range">
+        Greater Than <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="greaterthan">
+        less Than <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="lessthan">
+        <br>
+
+        <div id="ifRange" style="display:none">
+
+
+
+            If yes, explain: <input type='text' id='yes' name='yes'>
+            <br>
+            What can we do to accommodate you?  <input type='text' id='acc' name='acc'>
+        </div>
+
+        other 3<input type='text' id='other3' name='other3'><br>
+        other 4<input type='text' id='other4' name='other4'><br>
+
     </div>
+
+
 
     {% endblock %}
 
