@@ -12,32 +12,49 @@
     <div class="w3-container">
         <form action="/metadataquery/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <input type="text" name="guid"/>
+            GUID <input type="text" name="guid"/>
             <br/>
 
-            <input type="text" name="path"/>
+            File Name <input type="text" name=name"/>
             <br/>
 
-            <input type="text" name="creationtime"/>
+            Path <input type="text" name="path"/>
             <br/>
 
-            <input type="text" name="modtime"/>
+            Size in Bytes <input type="text" name="size"/>
             <br/>
 
-            <input type="text" name="author"/>
+            Creation Time <input type="text" name="creationtime"/>
             <br/>
 
-            <input type="text" name="size"/>
+            Creator <input type="text" name="creator"/>
             <br/>
 
-            <input type="text" name="date"/>
+            Modification Time <input type="text" name="modtime"/>
             <br/>
 
-            <input type="text" name="name"/>
+            Date <input type="text" name="date"/>
             <br/>
 
             <input type="submit" value="Submit" />
         </form>
+
+        <script type="text/javascript">
+        $(document).ready(function() {
+          $(".js-example-basic-single").select2();
+        });
+        </script>
+
+        <select class="js-example-basic-single">
+            <option value="dagr1">DAGR 1</option>
+            ...
+            <option value="dagr2">DAGR 2</option>
+            <option value="dagr3">DAGR 3</option>
+        </select>
+
+        Choose Parent DAGR
+
+        Choose Any Child DAGRs
 
     </div>
 
