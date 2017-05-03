@@ -10,6 +10,8 @@
     text-align:center;
 }
 
+
+
 .homepage-title {
     position: absolute;
     bottom: 90vh;
@@ -46,7 +48,6 @@
   -moz-box-sizing: border-box;    /* Firefox, other Gecko */
   box-sizing: border-box;         /* Opera/IE 8+ */
 }
-
 
 
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}

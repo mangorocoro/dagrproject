@@ -21,15 +21,49 @@
             <br/>
 
             <label for="category">Category: </label>
-            <input id="category" type="text" name=name"/>
+            <input id="category" type="text" name=category"/>
             <br/>
 
             <label for="path">Path: </label>
             <input id="path" type="text" name="path"/>
             <br/>
 
-            <label for="size">Size in Bytes: </label>
-            <input id="size" type="text" name="size"/>
+            <label>Size in Bytes: </label>
+            <div id="exact-container" style="display:block">
+                <input id="size-input" type="number" name="exact-size" min="0"/>
+            </div>
+
+            <div id="range-container" style="display:none">
+                <input id="min-input" type="number" name="min-size" min="0"/>
+                <input id="max-input" type="number" name="max-size" />
+            </div>
+
+            <div id="greater-container" style="display:none">
+                <input id="greater-input" type="number" name="greater-than-size" min="0"/>
+            </div>
+
+            <div id="less-container" style="display:none">
+                <input id="less-input" type="number" name="less-than-size" min="0"/>
+            </div>
+
+
+            <input type="radio" onclick="javascript:sizechoice();" name="rangeselection" id="exact" checked="checked">
+            <label for="exact">Exact</label>
+            <br/>
+
+
+            <input type="radio" onclick="javascript:sizechoice();" name="rangeselection" id="range">
+            <label for="range">Range</label>
+            <br/>
+
+
+            <input type="radio" onclick="javascript:sizechoice();" name="rangeselection" id="greaterthan">
+            <label for="greaterthan">Greater Than</label>
+            <br/>
+
+
+            <input type="radio" onclick="javascript:sizechoice();" name="rangeselection" id="lessthan">
+            <label for="lessthan">Less Than</label>
             <br/>
 
             <label for="creationtime">Creation Time: </label>
@@ -63,15 +97,29 @@
           });
         });
 
-        function rangeorexact() {
-            if (document.getElementById('range').checked) {
-                document.getElementById('ifRange').style.display = 'block';
-            } else if (document.getElementsById('greaterthan').checked) {
-                document.getElementById('ifGreater').style.display = 'block';
+        function sizechoice() {
+            if(document.getElementById('exact').checked) {
+                document.getElementById('exact-container').style.display = 'block';
+                document.getElementById('range-container').style.display = 'none';
+                document.getElementById('greater-container').style.display = 'none';
+                document.getElementById('less-container').style.display = 'none';
+            } else if (document.getElementById('range').checked) {
+                document.getElementById('range-container').style.display = 'block';
+                document.getElementById('exact-container').style.display = 'none';
+                document.getElementById('greater-container').style.display = 'none';
+                document.getElementById('less-container').style.display = 'none';
+
+            } else if (document.getElementById('greaterthan').checked) {
+                document.getElementById('greater-container').style.display = 'block';
+                document.getElementById('exact-container').style.display = 'none';
+                document.getElementById('range-container').style.display = 'none';
+                document.getElementById('less-container').style.display = 'none';
             } else if (document.getElementById('ifLess').checked) {
-                document.getElementById('ifLess').style.display = 'block';
+                document.getElementById('less-container').style.display = 'block';
+                document.getElementById('range-container').style.display = 'none';
+                document.getElementById('greater-container').style.display = 'none';
+                document.getElementById('exact-container').style.display = 'none';
             }
-            else document.getElementById('ifRange').style.display = 'none';
         }
         </script>
 
@@ -88,24 +136,6 @@
         <br/>
 
 
-
-        Exact <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="exact" checked="checked">
-        Range <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="range">
-        Greater Than <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="greaterthan">
-        less Than <input type="radio" onclick="javascript:rangeorexact();" name="rangeselection" id="lessthan">
-        <br>
-
-        <div id="ifRange" style="display:none">
-
-
-
-            If yes, explain: <input type='text' id='yes' name='yes'>
-            <br>
-            What can we do to accommodate you?  <input type='text' id='acc' name='acc'>
-        </div>
-
-        other 3<input type='text' id='other3' name='other3'><br>
-        other 4<input type='text' id='other4' name='other4'><br>
 
     </div>
 
