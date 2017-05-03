@@ -13,6 +13,7 @@ import subprocess
 import metadata_parser
 from bs4 import BeautifulSoup
 import urllib
+import re
 
 
 
@@ -53,8 +54,12 @@ def upload(request):
         print("file size is = {}".format(size))
 
         filename = str(file)
-        fd = os.open(str(file), os.O_RDWR|os.O_CREAT)
 
+        filename_escaped = re.escape(filename)
+
+        print("filename_escaped = {}".format(filename_escaped))
+
+        fd = os.open(str(file), os.O_RDWR|os.O_CREAT)
 
 
         # get the home directory of local computer
@@ -74,39 +79,40 @@ def upload(request):
 
 
         # run the command to get the paths
-        path_results = subprocess.Popen(["sh", "pathfinder.sh", filename, size_c, local_homedir])
-        #path_results = subprocess.check_output(["sh", "pathfinder.sh", filename, size_c, local_homedir]).decode("utf-8")
-        print("path_results = {}".format(path_results))
+        proc = subprocess.Popen(["sh", "pathfinder.sh", filename_escaped, size_c, local_homedir], stdout=subprocess.PIPE)
+
+        path_list = []
+
+        print("printing output now")
+        for row in proc.stdout:
+            path_list.append(row.decode("utf-8").rstrip())
+            print(row.decode("utf-8"))
+
+        # need to parse the file itself for if there are spaces in the filename we need to escape them
+        # so the find command works properly
+
+
+        print("path_list = {}".format(path_list))
 
 
 
 
-        # hacky way of finding path
-        # use filename and filesize as parameters to do a reverse lookup to find
-        # the path of the file that matches on local machine
 
-        #print("using bin bash = {}".format(subprocess.check_output(["/bin/bash", "-c", "ls"]).decode("utf-8")))
-        #print("using bin bash = {}".format(subprocess.check_output("/bin/bash -c ls", shell=True).decode("utf-8")))
-
-        #subprocess.check_output("touch /home/dan/hihi.txt", shell=True)
-
-        #print("ls to home = {}".format(subprocess.check_output("/bin/bash -c find -type f -name 'Z_KMP.pdf' 2>/dev/null", shell=True).decode("utf-8")))
-
-        #print("shell = false ==== {}".format(subprocess.check_output("/bin/bash -c find /home/dan -size 1083884c -name Z_KMP.pdf", shell=False)))
-
-#        path_search_results0 = subprocess.check_output(["find", "-type", "f", "-size", "1083884c", "-name", "Z_KMP.pdf"]).decode("utf-8")
- #       print("path_search 0 = {}".format(path_search_results0))
-
-  #      path_search_results1 = subprocess.check_output(
-   #         ["find", "-type", "f", "-size", "1083884c", "-name", "Z_KMP.pdf", "2>/dev/null"]).decode("utf-8")
-    #    print("path_search 1 = {}".format(path_search_results1))
+        ##############################################
+        #Still some issues with filenames with spaces
+        ##############################################
 
 
-#        path_search_results = subprocess.check_output("find /home/dan -type f -size {size}c -name {name} 2>/dev/null".format(size = size, name = filename), shell=True).decode("utf-8")
- #       print("path search results = {}".format(path_search_results))
 
-#        test_path_results = subprocess.check_output("find -type f -size 1083884c -name Z_KMP.pdf 2>/dev/null", shell=True).decode("utf-8")
- #       print("hardcoded results = {}".format(test_path_results))
+
+
+
+
+
+
+
+
+
 
         handle_uploaded_file(file, filename)
 
