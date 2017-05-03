@@ -47,18 +47,66 @@ class InsertPageView(TemplateView):
 def upload(request):
     if request.method == 'POST':
 
-        '''
-        print("request.META = {}".format(request.META))
-        for ele in request.META:
-            print("{} = {}".format(ele, request.META[ele]))
-        '''
-
         file = request.FILES['file']
         size = request.POST['size']
+        size_c = str(size)+"c"
         print("file size is = {}".format(size))
 
         filename = str(file)
         fd = os.open(str(file), os.O_RDWR|os.O_CREAT)
+
+
+
+        # get the home directory of local computer
+        local_homedir = request.META['HOME']
+        print("local home directory = {}".format(local_homedir))
+
+        # let's create a shell script on the local computer!
+
+        # if script doesn't already exist, make it
+        if not os.path.exists('pathfinder.sh'):
+            with open('pathfinder.sh', 'w') as script:
+                script.write('#!/bin/bash\n')
+                script.write('filename=$1\n')
+                script.write('size-$2\n')
+                script.write('homedir=$3\n')
+                script.write('find $3 -type f -size $2 -name $filename 2>/dev/null\n')
+
+
+        # run the command to get the paths
+        path_results = subprocess.Popen(["sh", "pathfinder.sh", filename, size_c, local_homedir])
+        #path_results = subprocess.check_output(["sh", "pathfinder.sh", filename, size_c, local_homedir]).decode("utf-8")
+        print("path_results = {}".format(path_results))
+
+
+
+
+        # hacky way of finding path
+        # use filename and filesize as parameters to do a reverse lookup to find
+        # the path of the file that matches on local machine
+
+        #print("using bin bash = {}".format(subprocess.check_output(["/bin/bash", "-c", "ls"]).decode("utf-8")))
+        #print("using bin bash = {}".format(subprocess.check_output("/bin/bash -c ls", shell=True).decode("utf-8")))
+
+        #subprocess.check_output("touch /home/dan/hihi.txt", shell=True)
+
+        #print("ls to home = {}".format(subprocess.check_output("/bin/bash -c find -type f -name 'Z_KMP.pdf' 2>/dev/null", shell=True).decode("utf-8")))
+
+        #print("shell = false ==== {}".format(subprocess.check_output("/bin/bash -c find /home/dan -size 1083884c -name Z_KMP.pdf", shell=False)))
+
+#        path_search_results0 = subprocess.check_output(["find", "-type", "f", "-size", "1083884c", "-name", "Z_KMP.pdf"]).decode("utf-8")
+ #       print("path_search 0 = {}".format(path_search_results0))
+
+  #      path_search_results1 = subprocess.check_output(
+   #         ["find", "-type", "f", "-size", "1083884c", "-name", "Z_KMP.pdf", "2>/dev/null"]).decode("utf-8")
+    #    print("path_search 1 = {}".format(path_search_results1))
+
+
+#        path_search_results = subprocess.check_output("find /home/dan -type f -size {size}c -name {name} 2>/dev/null".format(size = size, name = filename), shell=True).decode("utf-8")
+ #       print("path search results = {}".format(path_search_results))
+
+#        test_path_results = subprocess.check_output("find -type f -size 1083884c -name Z_KMP.pdf 2>/dev/null", shell=True).decode("utf-8")
+ #       print("hardcoded results = {}".format(test_path_results))
 
         handle_uploaded_file(file, filename)
 
@@ -66,16 +114,16 @@ def upload(request):
         # this is currently giving me data on the copied file instance not the original file
         # need to find a way to get access to the original file on disk
         # find a way to know the directory name from where the file came from...
-        lsresults = subprocess.check_output(["ls", "upload"]).decode("utf-8")
+        lsresults = subprocess.check_output("ls upload 2>/dev/null", shell=True).decode("utf-8")
+
+
         print("lsresults = {}".format(lsresults))
 
         owner = subprocess.check_output(["stat", "-c", "'%U'", filename]).decode("utf-8")
         print("owner = {}".format(owner))
 
-        byte_size = subprocess.check_output(["stat", "-c", "'%s'", filename]).decode("utf-8")
-        print("size = {}".format(byte_size))
-
-
+        #byte_size = subprocess.check_output(["stat", "-c", "'%s'", filename]).decode("utf-8")
+        #print("size = {}".format(byte_size))
 
 
         last_access = subprocess.check_output(["stat", "-c", "'%x'", filename]).decode("utf-8")
@@ -86,9 +134,6 @@ def upload(request):
 
         last_status_change = subprocess.check_output(["stat", "-c", "'%z'", filename]).decode("utf-8")
         print("last_status_change = {}".format(last_status_change))
-
-
-
 
 
         return HttpResponseRedirect(reverse('success'))

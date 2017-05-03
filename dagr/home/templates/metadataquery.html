@@ -7,5 +7,42 @@
 </head>
 <body>
 
+    {% block pagecontent %}
+    <h1 align="center">Metadata Query</h1>
+    <div class="w3-container">
+        <form action="/metadataquery/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="text" name="guid"/>
+            <br/>
+
+            <input type="text" name="path"/>
+            <br/>
+
+            <input type="text" name="creationtime"/>
+            <br/>
+
+            <input type="text" name="modtime"/>
+            <br/>
+
+            <input type="text" name="author"/>
+            <br/>
+
+            <input type="text" name="size"/>
+            <br/>
+
+            <input type="text" name="date"/>
+            <br/>
+
+            <input type="text" name="name"/>
+            <br/>
+
+            <input type="submit" value="Submit" />
+        </form>
+
+    </div>
+
+    {% endblock %}
+
+
 </body>
 </html>
