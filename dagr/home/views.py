@@ -48,109 +48,107 @@ class InsertPageView(TemplateView):
 def upload(request):
     if request.method == 'POST':
 
+        # extract file, filename, size, and local directory
         file = request.FILES['file']
-        size = request.POST['size']
-        size_c = str(size)+"c"
-        print("file size is = {}".format(size))
-
         filename = str(file)
-
-        filename_escaped = re.escape(filename)
-
-        print("filename_escaped = {}".format(filename_escaped))
-
-        fd = os.open(str(file), os.O_RDWR|os.O_CREAT)
-
-
-        # get the home directory of local computer
+        size = request.POST['size']
         local_homedir = request.META['HOME']
+
+
+        print("file = {}".format(file))
+        print("filename = {}".format(filename))
+        print("size = {}".format(size))
         print("local home directory = {}".format(local_homedir))
 
+
+
         # let's create a shell script on the local computer!
-
-        # if script doesn't already exist, make it
-        if not os.path.exists('pathfinder.sh'):
-            with open('pathfinder.sh', 'w') as script:
-                script.write('#!/bin/bash\n')
-                script.write('filename=$1\n')
-                script.write('size-$2\n')
-                script.write('homedir=$3\n')
-                script.write('find $3 -type f -size $2 -name $filename 2>/dev/null\n')
+        # for preparation of local file metadata extraction
+        createShellScript()
 
 
-        # run the command to get the paths
-        proc = subprocess.Popen(["sh", "pathfinder.sh", filename_escaped, size_c, local_homedir], stdout=subprocess.PIPE)
-
-        path_list = []
-
-        print("printing output now")
-        for row in proc.stdout:
-            path_list.append(row.decode("utf-8").rstrip())
-            print(row.decode("utf-8"))
-
-        # need to parse the file itself for if there are spaces in the filename we need to escape them
-        # so the find command works properly
-
-
-        print("path_list = {}".format(path_list))
-
-
-
-
-
-        ##############################################
-        #Still some issues with filenames with spaces
-        ##############################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-        handle_uploaded_file(file, filename)
-
-        # after file is uploaded get the data
-        # this is currently giving me data on the copied file instance not the original file
-        # need to find a way to get access to the original file on disk
-        # find a way to know the directory name from where the file came from...
-        lsresults = subprocess.check_output("ls upload 2>/dev/null", shell=True).decode("utf-8")
-
-
-        print("lsresults = {}".format(lsresults))
-
-        owner = subprocess.check_output(["stat", "-c", "'%U'", filename]).decode("utf-8")
-        print("owner = {}".format(owner))
-
-        #byte_size = subprocess.check_output(["stat", "-c", "'%s'", filename]).decode("utf-8")
-        #print("size = {}".format(byte_size))
-
-
-        last_access = subprocess.check_output(["stat", "-c", "'%x'", filename]).decode("utf-8")
-        print("last_access = {}".format(last_access))
-
-        last_data_modification = subprocess.check_output(["stat", "-c", "'%y'", filename]).decode("utf-8")
-        print("last_data_modification = {}".format(last_data_modification))
-
-        last_status_change = subprocess.check_output(["stat", "-c", "'%z'", filename]).decode("utf-8")
-        print("last_status_change = {}".format(last_status_change))
-
+        # extract all relevant metadata from file
+        extractLocalMetadata(filename, size, local_homedir)
 
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")
 
 
-def handle_uploaded_file(file, filename):
+def createShellScript():
+    # if pathfinder script doesn't already exist, make it
+    if not os.path.exists('pathfinder.sh'):
+        with open('pathfinder.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('filename=$1\n')
+            script.write('size-$2\n')
+            script.write('homedir=$3\n')
+            script.write('find $3 -type f -size $2 -name $filename 2>/dev/null\n')
 
-    localpath = subprocess.check_output(["realpath", filename]).decode("utf-8")
-    print("localpath = {}".format(localpath))
+    # if metadata extractor script doesn't already exist make it
+    if not os.path.exists('metadataextractor.sh'):
+        with open('metadataextractor.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('filename=$1\n')
+            script.write('owner="$(stat -c '%U' ${filename})"')
+            script.write('lastaccess="$(stat -c '%x' ${filename})"')
+            script.write('lastmod="$(stat -c '%y' ${filename})"')
+            script.write('laststatuschange="$(stat -c '%z' ${filename})"')
+
+
+
+def extractLocalMetadata(filename, size, local_homedir):
+
+    filename_escaped = re.escape(filename)
+    size_c = str(size) + "c"
+
+    print("filename escaped = {}".format(filename_escaped))
+    print("size_c = {}".format(size_c))
+
+    # run script to get the paths
+    proc = subprocess.Popen(["sh", "pathfinder.sh", filename_escaped, size_c, local_homedir], stdout=subprocess.PIPE)
+
+    path_list = []
+    # extract all the paths pathfinder returns you
+    for row in proc.stdout:
+        path_list.append(row.decode("utf-8").rstrip())
+        print(row.decode("utf-8"))
+
+    print("path_list = {}".format(path_list))
+
+    # if there is more than one path in path list, choose the first one
+    if len(path_list) != 1:
+        localpath = path_list[0]
+    elif len(path_list) == 0:
+        raise Exception('Why is there no path?')
+    else:
+        localpath = path_list[0]
+
+    print("local path extracted = {}".format(localpath))
+
+    ##############################################
+    # Still some issues with filenames with spaces
+    ##############################################
+
+
+    '''
+    # start assigning metadata
+    owner = subprocess.check_output(["stat", "-c", "'%U'", filename]).decode("utf-8")
+    print("owner = {}".format(owner))
+
+    last_access = subprocess.check_output(["stat", "-c", "'%x'", filename]).decode("utf-8")
+    print("last_access = {}".format(last_access))
+
+    last_data_modification = subprocess.check_output(["stat", "-c", "'%y'", filename]).decode("utf-8")
+    print("last_data_modification = {}".format(last_data_modification))
+
+    last_status_change = subprocess.check_output(["stat", "-c", "'%z'", filename]).decode("utf-8")
+    print("last_status_change = {}".format(last_status_change))
+    '''
+
+
+
+def handle_uploaded_file(file, filename):
 
 
     try:
@@ -167,14 +165,6 @@ def handle_uploaded_file(file, filename):
         creDate = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(date))
         print("file modified:", modDate)
         print("file created:", creDate)
-    try:
-        import pwd  # not available on all platforms
-        userinfo = pwd.getpwuid(st[ST_UID])
-    except (ImportError, KeyError):
-        print("failed to get the owner name for", file)
-    else:
-        creator = userinfo[0]
-        print("file owned by:", userinfo[0])
 
     id = uuid.uuid4()
 
@@ -261,7 +251,6 @@ class SuccessView(TemplateView):
     template_name = 'success.html'
 
 class MetadataQueryPageView(TemplateView):
-    print("why am i here?")
     template_name = 'metadataquery.html'
 
 
