@@ -7,5 +7,53 @@
 </head>
 <body>
 
+    {% block pagecontent %}
+    <h1 align="center">Categorize Your DAGR!</h1>
+
+    <div class="w3-container">
+
+        <form action="/categorizeSubmission/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div id="categoryselectionbox" style="float:left; padding-right: 100px">
+                Category Selection
+                <br/>
+                <select id="categorylist"  name="category">
+                    {% for cat in category_list %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="dagrselectionbox" style="float:left" >
+                DAGR Selection
+                <br/>
+                <select id="dagrlist" name="dagr">
+                    {% for key, value in dagr_list.items %}
+                    <option value="{{ value }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+            <input type="submit" value="Submit" />
+
+        </form>
+
+
+
+
+
+    </div>
+
+
+
+
+    <script type="text/javascript"></script>
+
+
+
+    {% endblock %}
+
+
 </body>
 </html>

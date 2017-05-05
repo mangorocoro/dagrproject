@@ -31,7 +31,60 @@ class BulkEntryPageView(TemplateView):
     template_name = 'bulkentry.html'
 
 class CategorizePageView(TemplateView):
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    x.execute("""SELECT * FROM DAGR""")
+    print("x = {}".format(x))
+    dagr_list = {}
+    for row in x:
+        dagr_list[row[0]] = row[1]
+
+    print("dagr_list = {}".format(dagr_list))
     template_name = 'categorize.html'
+
+
+def categorize(request):
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    x.execute("""SELECT * FROM DAGR""")
+
+    dagr_list = {}
+    id = 0
+    for row in x:
+        print("row = {}".format(row))
+        dagr_list[row[0]] = row[1]
+        id += 1
+
+    print("dagr_list = {}".format(dagr_list))
+
+    category_list = ['news', 'entertainment', 'education']
+
+    return render(request, 'categorize.html', {'dagr_list': dagr_list, 'category_list': category_list})
+
+def categorizeSubmission(request):
+    if request.method == 'POST':
+        category = request.POST.get('categorylist')
+        dagrname = request.POST.getlist('dagrlist', None)
+
+
+
+        print("selected category was = {}".format(category))
+        print("selected dagr was = {}".format(dagrname))
+        return HttpResponseRedirect(reverse('success'))
+
+    return HttpResponse("Failed")
+
+
+
+
 
 class DeletePageView(TemplateView):
     template_name = 'delete.html'
@@ -100,6 +153,12 @@ def createShellScript():
 
 def extractLocalMetadata(filename, size, local_homedir):
 
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
     filename_escaped = re.escape(filename)
     size_c = str(size) + "c"
 
@@ -153,38 +212,15 @@ def extractLocalMetadata(filename, size, local_homedir):
 
     print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}".format(owner, lastaccess, lastmod, laststatuschange))
 
-
-
-def handle_uploaded_file(file, filename):
-
-
-    try:
-        st = os.stat(filename)
-    except IOError:
-        print("failed to get information about", file)
-    else:
-        size = ("{:.3f}".format(st[ST_SIZE] / 1024.0))
-        print("file size: " + size + " KB")
-        print("st[ST_MTIME] = {}".format(st[ST_MTIME]))
-        date = st[ST_MTIME]
-        modDate = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(date))
-        date = st[ST_CTIME]
-        creDate = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(date))
-        print("file modified:", modDate)
-        print("file created:", creDate)
-
     id = uuid.uuid4()
 
-
-    if not os.path.exists('upload/'):
-        os.mkdir('upload/')
-
-    with open('upload/' + filename, 'wb+') as destination:
-        for chunk in file.chunks():
-            destination.write(chunk)
-
-
-
+    x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """,
+              (str(id), filename, localpath, size, lastmod, owner, ' '))
+    conn.commit()
+    x.execute("""SELECT * FROM DAGR""")
+    for row in x:
+        print(row)
+    conn.close()
 
 
 def urlParser(request):
@@ -221,7 +257,6 @@ def urlParser(request):
 
 
 def metadataqueryresults(request):
-    print("AM I EVEN HERE?")
     if request.method == "POST":
         # get the search terms, None if nothing entered
         print("IM A POST LIKE IM SUPPOSED TO BE")
@@ -247,6 +282,17 @@ def metadataqueryresults(request):
         print("creator = {}".format(creator))
         print("modtime = {}".format(modtime))
         print("date = {}".format(date))
+
+        conn = MySQLdb.connect(host="localhost",
+                               user="root",
+                               passwd="password",
+                               db="Documents")
+        x = conn.cursor()
+
+        x.execute("""SELECT * FROM DAGR""")
+        for row in x:
+            print(row)
+        conn.close()
 
 
 

@@ -7,7 +7,6 @@ urlpatterns = [
     url(r'^$', views.HomePageView.as_view(), name='home'),
     url(r'^about/$', views.AboutPageView.as_view(), name='about'),
     url(r'^bulkdataentry/$', views.BulkEntryPageView.as_view(), name='bulkdataentry'),
-    url(r'^categorize/$', views.CategorizePageView.as_view(), name='categorize'),
     url(r'^delete/$', views.DeletePageView.as_view(), name='delete'),
     url(r'^findorphans/$', views.FindOrphansPageView.as_view(), name='findorphans'),
     url(r'^htmlparser/$', views.HtmlParserPageView.as_view(), name='htmlparser'),
@@ -20,4 +19,7 @@ urlpatterns = [
     url(r'^upload/$', views.upload, name='upload'),
     url(r'^urlparser/$', views.urlParser, name='urlparser'),
     url(r'^metadataqueryresults/$', views.metadataqueryresults, name='metadataqueryresults'),
+    url(r'^categorize/$', views.categorize, name='categorize'),
+    url(r'^categorizeSubmission/$', views.categorizeSubmission, name='categorizeSubmission'),
+
 ]
