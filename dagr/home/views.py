@@ -90,11 +90,12 @@ def createShellScript():
         with open('metadataextractor.sh', 'w') as script:
             script.write('#!/bin/bash\n')
             script.write('filename=$1\n')
-            script.write('''owner="$(stat -c '%U' ${filename})"''')
-            script.write('''lastaccess="$(stat -c '%x' ${filename})"''')
-            script.write('''lastmod="$(stat -c '%y' ${filename})"''')
-            script.write('''laststatuschange="$(stat -c '%z' ${filename})"''')
-
+            script.write('''owner="$(stat -c '%U' ${filename})"\n''')
+            script.write('''lastaccess="$(stat -c '%x' ${filename})"\n''')
+            script.write('''lastmod="$(stat -c '%y' ${filename})"\n''')
+            script.write('''laststatuschange="$(stat -c '%z' ${filename})"\n''')
+            script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}\n''')
+            script.write('echo ${output}\n')
 
 
 def extractLocalMetadata(filename, size, local_homedir):
@@ -105,14 +106,16 @@ def extractLocalMetadata(filename, size, local_homedir):
     print("filename escaped = {}".format(filename_escaped))
     print("size_c = {}".format(size_c))
 
-    # run script to get the paths
+
+    # run pathfinder script to get the paths
     proc = subprocess.Popen(["sh", "pathfinder.sh", filename_escaped, size_c, local_homedir], stdout=subprocess.PIPE)
+    print("proc = {}".format(proc))
 
     path_list = []
     # extract all the paths pathfinder returns you
     for row in proc.stdout:
         path_list.append(row.decode("utf-8").rstrip())
-        print(row.decode("utf-8"))
+        print("row.decode = {}".format(row.decode("utf-8")))
 
     print("path_list = {}".format(path_list))
 
@@ -130,21 +133,25 @@ def extractLocalMetadata(filename, size, local_homedir):
     # Still some issues with filenames with spaces
     ##############################################
 
+    # grab metadata using metadataextractor script
+    extractor_output = subprocess.Popen(["sh", "metadataextractor.sh", localpath], stdout=subprocess.PIPE)
 
-    '''
-    # start assigning metadata
-    owner = subprocess.check_output(["stat", "-c", "'%U'", filename]).decode("utf-8")
-    print("owner = {}".format(owner))
+    print("extractor output = {}".format(extractor_output))
 
-    last_access = subprocess.check_output(["stat", "-c", "'%x'", filename]).decode("utf-8")
-    print("last_access = {}".format(last_access))
+    for row in extractor_output.stdout:
+        print("row.decode = {}".format(row.decode("utf-8").rstrip()))
+        extractor_output_combined = row.decode("utf-8")
+        print(extractor_output_combined)
 
-    last_data_modification = subprocess.check_output(["stat", "-c", "'%y'", filename]).decode("utf-8")
-    print("last_data_modification = {}".format(last_data_modification))
+    extractor_split = extractor_output_combined.split("^^")
+    print("split array = {}".format(extractor_split))
 
-    last_status_change = subprocess.check_output(["stat", "-c", "'%z'", filename]).decode("utf-8")
-    print("last_status_change = {}".format(last_status_change))
-    '''
+    owner = extractor_split[0]
+    lastaccess = extractor_split[1]
+    lastmod = extractor_split[2]
+    laststatuschange = extractor_split[3]
+
+    print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}".format(owner, lastaccess, lastmod, laststatuschange))
 
 
 
