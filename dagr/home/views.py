@@ -90,10 +90,10 @@ def createShellScript():
         with open('metadataextractor.sh', 'w') as script:
             script.write('#!/bin/bash\n')
             script.write('filename=$1\n')
-            script.write('owner="$(stat -c '%U' ${filename})"')
-            script.write('lastaccess="$(stat -c '%x' ${filename})"')
-            script.write('lastmod="$(stat -c '%y' ${filename})"')
-            script.write('laststatuschange="$(stat -c '%z' ${filename})"')
+            script.write('''owner="$(stat -c '%U' ${filename})"''')
+            script.write('''lastaccess="$(stat -c '%x' ${filename})"''')
+            script.write('''lastmod="$(stat -c '%y' ${filename})"''')
+            script.write('''laststatuschange="$(stat -c '%z' ${filename})"''')
 
 
 
