@@ -31,53 +31,83 @@ class BulkEntryPageView(TemplateView):
     template_name = 'bulkentry.html'
 
 class CategorizePageView(TemplateView):
-    conn = MySQLdb.connect(host="localhost",
-                           user="root",
-                           passwd="password",
-                           db="Documents")
-    x = conn.cursor()
-
-    x.execute("""SELECT * FROM DAGR""")
-    print("x = {}".format(x))
-    dagr_list = {}
-    for row in x:
-        dagr_list[row[0]] = row[1]
-
-    print("dagr_list = {}".format(dagr_list))
     template_name = 'categorize.html'
 
 
 def categorize(request):
+    # make connection to database
     conn = MySQLdb.connect(host="localhost",
                            user="root",
                            passwd="password",
                            db="Documents")
     x = conn.cursor()
 
+    # submit query for getting all DAGRs
     x.execute("""SELECT * FROM DAGR""")
 
+    # create dictionary of DAGRs
     dagr_list = {}
-    id = 0
     for row in x:
         print("row = {}".format(row))
         dagr_list[row[0]] = row[1]
-        id += 1
+
 
     print("dagr_list = {}".format(dagr_list))
 
-    category_list = ['news', 'entertainment', 'education']
+    # submit query for getting all Categories
+    y = conn.cursor()
+    y.execute("""SELECT * FROM Categories""")
+
+    # create dictionary of Categories
+    category_list = {}
+
+    for row in y:
+        print("row = {}".format(row))
+        category_list[row[0]] = row[1]
+
+
+    conn.close()
+
 
     return render(request, 'categorize.html', {'dagr_list': dagr_list, 'category_list': category_list})
 
 def categorizeSubmission(request):
     if request.method == 'POST':
-        category = request.POST.get('categorylist')
-        dagrname = request.POST.getlist('dagrlist', None)
-
-
+        category = request.POST.get('category-selection')
+        dagrid = request.POST.get('dagr-selection', None)
 
         print("selected category was = {}".format(category))
-        print("selected dagr was = {}".format(dagrname))
+        print("selected dagr id was = {}".format(dagrid))
+
+        # make connection to database
+        conn = MySQLdb.connect(host="localhost",
+                               user="root",
+                               passwd="password",
+                               db="Documents")
+        x = conn.cursor()
+
+        x.execute("""SELECT * FROM Categories""")
+
+
+        print("---category table---")
+        dagrwithcat_exists = False
+        for row in x:
+            print("current category = {}".format(row[0]))
+            print("current dagrid = {}".format(row[1]))
+
+            if row[0] == category and row[1] == dagrid:
+                print("this combo already exists! Breaking out of loop!")
+                dagrwithcat_exists = True
+                break
+            print("row = {}".format(row))
+
+        if not dagrwithcat_exists:
+            x.execute(""" INSERT INTO Categories VALUES (%s, %s) """, (category, dagrid))
+            conn.commit()
+            print("new entry inserted into Category table!")
+
+        conn.close()
+
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")

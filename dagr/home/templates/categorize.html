@@ -17,7 +17,7 @@
             <div id="categoryselectionbox" style="float:left; padding-right: 100px">
                 Category Selection
                 <br/>
-                <select id="categorylist"  name="category">
+                <select id="categorylist"  name="category-selection">
                     {% for cat in category_list %}
                     <option value="{{ cat }}">{{ cat }}</option>
                     {% endfor %}
@@ -27,9 +27,9 @@
             <div id="dagrselectionbox" style="float:left" >
                 DAGR Selection
                 <br/>
-                <select id="dagrlist" name="dagr">
+                <select id="dagrlist" name="dagr-selection" required>
                     {% for key, value in dagr_list.items %}
-                    <option value="{{ value }}">{{ value }}</option>
+                    <option value="{{ key }}">{{ value }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -38,17 +38,35 @@
             <input type="submit" value="Submit" />
 
         </form>
-
-
-
-
-
     </div>
 
 
 
 
-    <script type="text/javascript"></script>
+    <script type="text/javascript">
+        $("#categorylist").select2({
+            tags: true,
+            createTag: function (params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                }
+            },
+            templateResult: function (data) {
+                var $result = $("<span></span>");
+
+            $result.text(data.text);
+
+            if (data.newOption) {
+              $result.append(" <em>(new)</em>");
+            }
+
+            return $result;
+            }
+        });
+
+    </script>
 
 
 
