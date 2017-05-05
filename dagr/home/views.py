@@ -147,9 +147,9 @@ def extractLocalMetadata(filename, size, local_homedir):
     print("split array = {}".format(extractor_split))
 
     owner = extractor_split[0]
-    lastaccess = extractor_split[1]
-    lastmod = extractor_split[2]
-    laststatuschange = extractor_split[3]
+    lastaccess = extractor_split[1].split('.')[0]
+    lastmod = extractor_split[2].split('.')[0]
+    laststatuschange = extractor_split[3].split('.')[0]
 
     print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}".format(owner, lastaccess, lastmod, laststatuschange))
 
