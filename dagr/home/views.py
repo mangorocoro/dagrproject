@@ -73,6 +73,27 @@ class BulkEntryPageView(TemplateView):
     template_name = 'bulkentry.html'
 
 
+def bulk(request):
+    if request.method == 'POST':
+        # extract file, filename, size, and local directory
+        file = request.FILES['file']
+        filename = str(file)
+        size = request.POST['size']
+        local_homedir = request.META['HOME']
+
+        print("file = {}".format(file))
+        print("filename = {}".format(filename))
+        print("size = {}".format(size))
+        print("local home directory = {}".format(local_homedir))
+
+        # extract all relevant metadata from file
+        extractLocalMetadata(filename, size, local_homedir)
+
+
+
+
+
+
 
 
 class CategorizePageView(TemplateView):
@@ -190,7 +211,9 @@ def upload(request):
 
 
         # extract all relevant metadata from file
-        extractLocalMetadata(filename, size, local_homedir)
+        guid, localpath, lastmod, owner = extractLocalMetadata(filename, size, local_homedir)
+
+        insertIntoDB(guid, filename, localpath, size, lastmod, owner)
 
         return HttpResponseRedirect(reverse('success'))
 
@@ -199,18 +222,7 @@ def upload(request):
 
 
 
-
-
-
-
-
 def extractLocalMetadata(filename, size, local_homedir):
-
-    conn = MySQLdb.connect(host="localhost",
-                           user="root",
-                           passwd="password",
-                           db="Documents")
-    x = conn.cursor()
 
     filename_escaped = re.escape(filename)
     size_c = str(size) + "c"
@@ -265,15 +277,34 @@ def extractLocalMetadata(filename, size, local_homedir):
 
     print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}".format(owner, lastaccess, lastmod, laststatuschange))
 
-    id = uuid.uuid4()
+    guid = uuid.uuid4()
+
+    return guid, localpath, lastmod, owner
+
+
+
+
+def insertIntoDB(guid, filename, localpath, size, lastmod, owner):
+
+    guid = str(guid)
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
 
     x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """,
-              (str(id), filename, localpath, size, lastmod, owner, ' '))
+              (guid, filename, localpath, size, lastmod, owner, ' '))
     conn.commit()
     x.execute("""SELECT * FROM DAGR""")
     for row in x:
         print(row)
     conn.close()
+    print("dagr created from metadata!")
+
+
+
+
 
 
 def urlParser(request):

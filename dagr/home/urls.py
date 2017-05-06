@@ -21,5 +21,5 @@ urlpatterns = [
     url(r'^metadataqueryresults/$', views.metadataqueryresults, name='metadataqueryresults'),
     url(r'^categorize/$', views.categorize, name='categorize'),
     url(r'^categorizeSubmission/$', views.categorizeSubmission, name='categorizeSubmission'),
-
+    url(r'^bulk/$', views.bulk, name='bulk'),
 ]

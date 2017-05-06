@@ -10,19 +10,17 @@
     {% block pagecontent %}
     <h1 align="center">Insert Local File</h1>
     <div class="w3-container">
-
-    <form action="/upload/" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="file" id="file"/>
-        <br/>
-        <input type="hidden" name="size" id="size_input"/>
-        <input type="submit" value="Upload File" id="size"/>
-    </form>
+        <form action="/upload/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" id="file"/>
+            <br/>
+            <input type="hidden" name="size" id="size_input"/>
+            <input type="submit" value="Upload File" id="size"/>
+        </form>
+    </div>
 
         <script type="text/javascript">
-
             var size;
-
             // gets the size of the file before upload
             $("#file").on("change", function() {
                 console.log(this.files[0].size);
@@ -44,9 +42,8 @@
                             }
                         });
                 });
-
-
         </script>
+
 
     {% endblock %}
 

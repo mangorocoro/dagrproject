@@ -11,9 +11,39 @@
 
     <h1 align="center">Bulk Load Files</h1>
     <div class="w3-container">
-
+        <form action="/upload/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" id="file"/>
+            <br/>
+            <input type="hidden" name="size" id="size_input"/>
+            <input type="submit" value="Upload File" id="size"/>
+        </form>
 
     </div>
+
+    <script type="text/javascript">
+        var size;
+        // gets the size of the file before upload
+        $("#file").on("change", function() {
+            console.log(this.files[0].size);
+            size = this.files[0].size;
+            $("#size_input").val(size);
+        });
+
+        // disable submit button until there is a file loaded up for upload
+        $(document).ready(
+            function(){
+                $('input:submit').attr('disabled',true);
+                $('input:file').change(
+                    function(){
+                        if ($(this).val()){
+                            $('input:submit').removeAttr('disabled');
+                        } else {
+                            $('input:submit').attr('disabled',true);
+                        }
+                    });
+            });
+    </script>
 
 
 
