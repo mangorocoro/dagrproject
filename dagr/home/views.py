@@ -14,6 +14,8 @@ import metadata_parser
 from bs4 import BeautifulSoup
 import urllib
 import re
+from itertools import tee, zip_longest
+
 
 
 def createShellScript():
@@ -22,7 +24,8 @@ def createShellScript():
         with open('pathfinder.sh', 'w') as script:
             script.write('#!/bin/bash\n')
             script.write('filename=$1\n')
-            script.write('size-$2\n')
+#            script.write('''escaped="$(printf "%q\\n" "$filename")"\n''')
+            script.write('size=$2\n')
             script.write('homedir=$3\n')
             script.write('find $3 -type f -size $2 -name $filename 2>/dev/null\n')
 
@@ -75,6 +78,11 @@ class BulkEntryPageView(TemplateView):
 
 def bulk(request):
     if request.method == 'POST':
+
+        # let's create a shell script on the local computer!
+        # for preparation of local file metadata extraction
+        createShellScript()
+
         # extract file, filename, size, and local directory
         file = request.FILES['file']
         filename = str(file)
@@ -86,8 +94,49 @@ def bulk(request):
         print("size = {}".format(size))
         print("local home directory = {}".format(local_homedir))
 
-        # extract all relevant metadata from file
-        extractLocalMetadata(filename, size, local_homedir)
+        # extract all relevant metadata from current file
+        guid, localpath, lastmod, owner = extractLocalMetadata(filename, size, local_homedir)
+
+        print("localpath = {}".format(localpath))
+        print("filename = {}".format(filename))
+
+
+        # get the directory of the file selected for bulk load preparation
+        directory = localpath[:-len(filename)]
+
+        print("directory of file is = {}".format(directory))
+
+
+        # run file script to get all the files in the current directory
+        proc = subprocess.Popen(["bash", "files.sh", directory], stdout=subprocess.PIPE)
+        print("proc = {}".format(proc))
+
+        file_list_str = ""
+        # extract all the paths pathfinder returns you
+        for row in proc.stdout:
+            file_list_str += row.decode("utf-8").rstrip()
+            print("row.decode = {}".format(row.decode("utf-8")))
+
+        print("file_list_str= {}".format(file_list_str))
+
+        indices = [m.start() for m in re.finditer("/home/", file_list_str)]
+
+        print("indices = {}".format(indices))
+        start, end = tee(indices)
+
+        end.__next__()
+
+        separated_list = [file_list_str[i:j] for i, j in zip_longest(start, end)]
+
+        cleaned = []
+        for ele in separated_list:
+            cleaned.append(ele.rstrip())
+
+        print("cleaned ={}".format(cleaned))
+
+        return HttpResponseRedirect(reverse('success'))
+
+    return HttpResponse("Failed")
 
 
 
@@ -197,6 +246,10 @@ class InsertPageView(TemplateView):
 def upload(request):
     if request.method == 'POST':
 
+        # let's create a shell script on the local computer!
+        # for preparation of local file metadata extraction
+        createShellScript()
+
         # extract file, filename, size, and local directory
         file = request.FILES['file']
         filename = str(file)
@@ -205,10 +258,6 @@ def upload(request):
 
 
         print("file = {}".format(file))
-        print("filename = {}".format(filename))
-        print("size = {}".format(size))
-        print("local home directory = {}".format(local_homedir))
-
 
         # extract all relevant metadata from file
         guid, localpath, lastmod, owner = extractLocalMetadata(filename, size, local_homedir)
@@ -220,24 +269,28 @@ def upload(request):
     return HttpResponse("Failed")
 
 
+def escape(filename):
+    special_chars = ['!', '#', '$', '%', '&', "'", '*', '+', '-', '.', '^', '_', '`', '|', '~', ':', ' ']
+    for char in filename:
+        if char in special_chars:
+            print('blah')
+
+
 
 
 def extractLocalMetadata(filename, size, local_homedir):
 
-    filename_escaped = re.escape(filename)
     size_c = str(size) + "c"
-
-    print("filename escaped = {}".format(filename_escaped))
     print("size_c = {}".format(size_c))
 
 
     # run pathfinder script to get the paths
-    proc = subprocess.Popen(["sh", "pathfinder.sh", filename_escaped, size_c, local_homedir], stdout=subprocess.PIPE)
-    print("proc = {}".format(proc))
+    proc = subprocess.Popen(["bash", "pathfinder.sh", filename, size_c, local_homedir], stdout=subprocess.PIPE)
 
     path_list = []
     # extract all the paths pathfinder returns you
     for row in proc.stdout:
+        print("row of proc.stdout = {}".format(row))
         path_list.append(row.decode("utf-8").rstrip())
         print("row.decode = {}".format(row.decode("utf-8")))
 
@@ -258,7 +311,7 @@ def extractLocalMetadata(filename, size, local_homedir):
     ##############################################
 
     # grab metadata using metadataextractor script
-    extractor_output = subprocess.Popen(["sh", "metadataextractor.sh", localpath], stdout=subprocess.PIPE)
+    extractor_output = subprocess.Popen(["bash", "metadataextractor.sh", localpath], stdout=subprocess.PIPE)
 
     print("extractor output = {}".format(extractor_output))
 

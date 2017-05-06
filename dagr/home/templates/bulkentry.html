@@ -11,7 +11,7 @@
 
     <h1 align="center">Bulk Load Files</h1>
     <div class="w3-container">
-        <form action="/upload/" method="POST" enctype="multipart/form-data">
+        <form action="/bulk/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="file" name="file" id="file"/>
             <br/>
