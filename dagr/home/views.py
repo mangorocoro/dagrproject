@@ -16,12 +16,54 @@ import urllib
 import re
 
 
+def createShellScript():
+    # if pathfinder script doesn't already exist, make it
+    if not os.path.exists('pathfinder.sh'):
+        with open('pathfinder.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('filename=$1\n')
+            script.write('size-$2\n')
+            script.write('homedir=$3\n')
+            script.write('find $3 -type f -size $2 -name $filename 2>/dev/null\n')
+
+    # if metadata extractor script doesn't already exist make it
+    if not os.path.exists('metadataextractor.sh'):
+        with open('metadataextractor.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('filename=$1\n')
+            script.write('''owner="$(stat -c '%U' ${filename})"\n''')
+            script.write('''lastaccess="$(stat -c '%x' ${filename})"\n''')
+            script.write('''lastmod="$(stat -c '%y' ${filename})"\n''')
+            script.write('''laststatuschange="$(stat -c '%z' ${filename})"\n''')
+            script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}\n''')
+            script.write('echo ${output}\n')
+
+    # if file lister script doesn't already exist make it
+    if not os.path.exists('files.sh'):
+        with open('files.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('currdir=$1\n')
+            script.write('''filesonly="$(find ${currdir} -maxdepth 1 -not -path '*/\.*' -type f \( ! -iname ".*" \))"\n''')
+            script.write('echo $filesonly\n')
+
+    # if directory lister script doesn't already exist make it
+    if not os.path.exists('directories.sh'):
+        with open('directories.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('currdir=$1\n')
+            script.write('''directories="$(find ${currdir} -maxdepth 1 -not -path '*/\.*' -type d \( ! -iname ".*" \))"\n''')
+            script.write('echo $directories\n')
+
 
 class HomePageView(TemplateView):
     '''
     def get(self, request, **kwargs):
         return render(request, 'index.html', context=None)
     '''
+    # let's create a shell script on the local computer!
+    # for preparation of local file metadata extraction
+    createShellScript()
+
     template_name = 'index.html'
 
 class AboutPageView(TemplateView):
@@ -29,6 +71,9 @@ class AboutPageView(TemplateView):
 
 class BulkEntryPageView(TemplateView):
     template_name = 'bulkentry.html'
+
+
+
 
 class CategorizePageView(TemplateView):
     template_name = 'categorize.html'
@@ -144,12 +189,6 @@ def upload(request):
         print("local home directory = {}".format(local_homedir))
 
 
-
-        # let's create a shell script on the local computer!
-        # for preparation of local file metadata extraction
-        createShellScript()
-
-
         # extract all relevant metadata from file
         extractLocalMetadata(filename, size, local_homedir)
 
@@ -158,27 +197,11 @@ def upload(request):
     return HttpResponse("Failed")
 
 
-def createShellScript():
-    # if pathfinder script doesn't already exist, make it
-    if not os.path.exists('pathfinder.sh'):
-        with open('pathfinder.sh', 'w') as script:
-            script.write('#!/bin/bash\n')
-            script.write('filename=$1\n')
-            script.write('size-$2\n')
-            script.write('homedir=$3\n')
-            script.write('find $3 -type f -size $2 -name $filename 2>/dev/null\n')
 
-    # if metadata extractor script doesn't already exist make it
-    if not os.path.exists('metadataextractor.sh'):
-        with open('metadataextractor.sh', 'w') as script:
-            script.write('#!/bin/bash\n')
-            script.write('filename=$1\n')
-            script.write('''owner="$(stat -c '%U' ${filename})"\n''')
-            script.write('''lastaccess="$(stat -c '%x' ${filename})"\n''')
-            script.write('''lastmod="$(stat -c '%y' ${filename})"\n''')
-            script.write('''laststatuschange="$(stat -c '%z' ${filename})"\n''')
-            script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}\n''')
-            script.write('echo ${output}\n')
+
+
+
+
 
 
 def extractLocalMetadata(filename, size, local_homedir):
