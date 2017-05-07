@@ -74,7 +74,7 @@ def createShellScript():
             script.write('''lastmod="$(stat -c '%y' "${filename}")"\n''')
             script.write('''laststatuschange="$(stat -c '%z' "${filename}")"\n''')
             script.write('''size="$(stat -c '%s' "${filename}")"\n''')
-            script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}"^^"${size}"^^"${filename}\n''')
+            script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}"^^"${size}\n''')
             script.write('echo ${output}\n')
 
     # if file lister script doesn't already exist make it
@@ -131,7 +131,7 @@ def bulk(request):
         print("local home directory = {}".format(local_homedir))
 
         # extract all relevant metadata from current file
-        guid, localpath, lastmod, owner, extract_size, extract_filename = extractLocalMetadata(filename, size, local_homedir)
+        guid, localpath, lastmod, owner, extract_size = extractLocalMetadata(filename, size, local_homedir)
 
         print("localpath = {}".format(localpath))
         print("filename = {}".format(filename))
@@ -173,14 +173,18 @@ def bulk(request):
         # insert each of the files into the db
         for f in cleaned_files:
             # extract all relevant metadata from file
-            guid, localpath, lastmod, owner, current_file_size, current_filename = extractWithPath(f)
+            guid, localpath, lastmod, owner, current_file_size = extractWithPath(f)
             print("localpath = {}".format(localpath))
-            print("current_filename = {}".format(current_filename))
             print("current file size = {}".format(current_file_size))
+
+            # process current filename
+            current_filename = {localpath.replace(directory, '').replace('/', '') for x in localpath}
+            print("current filename = {}".format(current_filename))
+
             # insert the file's metadata as a DAGR
             insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner)
 
-            #'/home/dan/Documents/UMD/424 - DB/Database Design Project.pdf'
+        
 
 
 
@@ -313,7 +317,7 @@ def upload(request):
         print("file = {}".format(file))
 
         # extract all relevant metadata from file
-        guid, localpath, lastmod, owner, extract_size, extract_filename = extractLocalMetadata(filename, size, local_homedir)
+        guid, localpath, lastmod, owner, extract_size = extractLocalMetadata(filename, size, local_homedir)
 
         insertIntoDB(guid, filename, localpath, size, lastmod, owner)
 
@@ -384,12 +388,12 @@ def extractWithPath(localpath):
     size = extractor_split[4].split('.')[0]
     filename = extractor_split[5].split('.')[0]
 
-    print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}\nsize = {}\nfilename = {}".format(owner, lastaccess, lastmod,
-                                                                                    laststatuschange, size, filename))
+    print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}\nsize = {}".format(owner, lastaccess, lastmod,
+                                                                                    laststatuschange, size))
 
     guid = uuid.uuid4()
 
-    return guid, localpath, lastmod, owner, size, filename
+    return guid, localpath, lastmod, owner, size
 
 
 
