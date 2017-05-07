@@ -73,7 +73,8 @@ def createShellScript():
             script.write('''lastaccess="$(stat -c '%x' "${filename}")"\n''')
             script.write('''lastmod="$(stat -c '%y' "${filename}")"\n''')
             script.write('''laststatuschange="$(stat -c '%z' "${filename}")"\n''')
-            script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}\n''')
+            script.write('''size="$(stat -c '%s' "${filename}")"\n''')
+            script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}"^^"${size}"^^"${filename}\n''')
             script.write('echo ${output}\n')
 
     # if file lister script doesn't already exist make it
@@ -81,7 +82,7 @@ def createShellScript():
         with open('files.sh', 'w') as script:
             script.write('#!/bin/bash\n')
             script.write('currdir=$1\n')
-            script.write('''filesonly="$(find ${currdir} -maxdepth 1 -not -path '*/\.*' -type f \( ! -iname ".*" \))"\n''')
+            script.write('''filesonly="$(find "${currdir}" -maxdepth 1 -not -path '*/\.*' -type f \( ! -iname ".*" \))"\n''')
             script.write('echo $filesonly\n')
 
     # if directory lister script doesn't already exist make it
@@ -89,7 +90,7 @@ def createShellScript():
         with open('directories.sh', 'w') as script:
             script.write('#!/bin/bash\n')
             script.write('currdir=$1\n')
-            script.write('''directories="$(find ${currdir} -maxdepth 1 -not -path '*/\.*' -type d \( ! -iname ".*" \))"\n''')
+            script.write('''directories="$(find "${currdir}" -maxdepth 1 -not -path '*/\.*' -type d \( ! -iname ".*" \))"\n''')
             script.write('echo $directories\n')
 
 
@@ -130,7 +131,7 @@ def bulk(request):
         print("local home directory = {}".format(local_homedir))
 
         # extract all relevant metadata from current file
-        guid, localpath, lastmod, owner = extractLocalMetadata(filename, size, local_homedir)
+        guid, localpath, lastmod, owner, extract_size, extract_filename = extractLocalMetadata(filename, size, local_homedir)
 
         print("localpath = {}".format(localpath))
         print("filename = {}".format(filename))
@@ -163,11 +164,28 @@ def bulk(request):
 
         separated_list = [file_list_str[i:j] for i, j in zip_longest(start, end)]
 
-        cleaned = []
+        cleaned_files = []
         for ele in separated_list:
-            cleaned.append(ele.rstrip())
+            cleaned_files.append(ele.rstrip())
 
-        print("cleaned ={}".format(cleaned))
+        print("cleaned ={}".format(cleaned_files))
+
+        # insert each of the files into the db
+        for f in cleaned_files:
+            # extract all relevant metadata from file
+            guid, localpath, lastmod, owner, current_file_size, current_filename = extractWithPath(f)
+            print("localpath = {}".format(localpath))
+            print("current_filename = {}".format(current_filename))
+            print("current file size = {}".format(current_file_size))
+            # insert the file's metadata as a DAGR
+            insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner)
+
+            #'/home/dan/Documents/UMD/424 - DB/Database Design Project.pdf'
+
+
+
+
+
 
         return HttpResponseRedirect(reverse('success'))
 
@@ -295,21 +313,13 @@ def upload(request):
         print("file = {}".format(file))
 
         # extract all relevant metadata from file
-        guid, localpath, lastmod, owner = extractLocalMetadata(filename, size, local_homedir)
+        guid, localpath, lastmod, owner, extract_size, extract_filename = extractLocalMetadata(filename, size, local_homedir)
 
         insertIntoDB(guid, filename, localpath, size, lastmod, owner)
 
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")
-
-
-def escape(filename):
-    special_chars = ['!', '#', '$', '%', '&', "'", '*', '+', '-', '.', '^', '_', '`', '|', '~', ':', ' ']
-    for char in filename:
-        if char in special_chars:
-            print('blah')
-
 
 
 
@@ -350,11 +360,10 @@ def extractLocalMetadata(filename, size, local_homedir):
         localpath = path_list[0]
 
     print("local path extracted = {}".format(localpath))
+    return extractWithPath(localpath)
 
-    ##############################################
-    # Still some issues with filenames with spaces
-    ##############################################
 
+def extractWithPath(localpath):
     # grab metadata using metadataextractor script
     extractor_output = subprocess.Popen(["bash", "metadataextractor.sh", localpath], stdout=subprocess.PIPE)
 
@@ -372,13 +381,15 @@ def extractLocalMetadata(filename, size, local_homedir):
     lastaccess = extractor_split[1].split('.')[0]
     lastmod = extractor_split[2].split('.')[0]
     laststatuschange = extractor_split[3].split('.')[0]
+    size = extractor_split[4].split('.')[0]
+    filename = extractor_split[5].split('.')[0]
 
-    print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}".format(owner, lastaccess, lastmod, laststatuschange))
+    print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}\nsize = {}\nfilename = {}".format(owner, lastaccess, lastmod,
+                                                                                    laststatuschange, size, filename))
 
     guid = uuid.uuid4()
 
-    return guid, localpath, lastmod, owner
-
+    return guid, localpath, lastmod, owner, size, filename
 
 
 
