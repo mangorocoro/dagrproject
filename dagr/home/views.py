@@ -15,29 +15,64 @@ from bs4 import BeautifulSoup
 import urllib
 import re
 from itertools import tee, zip_longest
-
+import shlex
 
 
 def createShellScript():
+
+    # if filenamecleanup script doesn't already exist, make it
+    if not os.path.exists('filenamecleanup.sh'):
+        with open('filenamecleanup.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('filename=$1\n')
+            script.write('''newword=""\n''')
+            script.write('loopcounter=1\n')
+            script.write('for word in $filename; do\n')
+            script.write('if [ $loopcounter = 1 ]; then\n')
+            script.write('newword=$word\n')
+            script.write('loopcounter=$(($loopcounter + 1))\n')
+            script.write('else\n')
+            script.write('''newword="$newword\ $word"\n''')
+            script.write('fi\n')
+            script.write('done\n')
+            script.write('echo $newword\n')
+
     # if pathfinder script doesn't already exist, make it
     if not os.path.exists('pathfinder.sh'):
         with open('pathfinder.sh', 'w') as script:
             script.write('#!/bin/bash\n')
-            script.write('filename=$1\n')
-#            script.write('''escaped="$(printf "%q\\n" "$filename")"\n''')
+            script.write('cleanfilename=$1\n')
             script.write('size=$2\n')
             script.write('homedir=$3\n')
-            script.write('find $3 -type f -size $2 -name $filename 2>/dev/null\n')
+            script.write('find $homedir -type f -size $size -name "$cleanfilename" 2>/dev/null\n')
+
+    # new pathfinder
+    if not os.path.exists('newpathfinder.sh'):
+        with open('newpathfinder.sh', 'w') as script:
+            script.write('#!/bin/bash\n')
+            script.write('numargs=$#\n')
+            script.write('concatrange=$(($numargs - 2))\n')
+            script.write('count=2\n')
+            script.write('newname=$1\n')
+            script.write('for i in ${@:2}; do\n')
+            script.write('''if [ "$count" -le "$concatrange" ]; then\n''')
+            script.write('''newname="$newname\\ ${i}"\n''')
+            script.write('count=$(($count+1))\n')
+            script.write('fi\n')
+            script.write('done\n')
+            script.write('size=${@: -2:1}\n')
+            script.write('homedir=${@: -1:1}\n')
+            script.write('find $homedir -type f -size $size -name $newname 2>/dev/null\n')
 
     # if metadata extractor script doesn't already exist make it
     if not os.path.exists('metadataextractor.sh'):
         with open('metadataextractor.sh', 'w') as script:
             script.write('#!/bin/bash\n')
             script.write('filename=$1\n')
-            script.write('''owner="$(stat -c '%U' ${filename})"\n''')
-            script.write('''lastaccess="$(stat -c '%x' ${filename})"\n''')
-            script.write('''lastmod="$(stat -c '%y' ${filename})"\n''')
-            script.write('''laststatuschange="$(stat -c '%z' ${filename})"\n''')
+            script.write('''owner="$(stat -c '%U' "${filename}")"\n''')
+            script.write('''lastaccess="$(stat -c '%x' "${filename}")"\n''')
+            script.write('''lastmod="$(stat -c '%y' "${filename}")"\n''')
+            script.write('''laststatuschange="$(stat -c '%z' "${filename}")"\n''')
             script.write('''output=${owner}"^^"${lastaccess}"^^"${lastmod}"^^"${laststatuschange}\n''')
             script.write('echo ${output}\n')
 
@@ -283,9 +318,19 @@ def extractLocalMetadata(filename, size, local_homedir):
     size_c = str(size) + "c"
     print("size_c = {}".format(size_c))
 
+    print("filename is = {}".format(filename))
+
+    # clean the filename up
+    filename_proc = subprocess.Popen(["bash", "filenamecleanup.sh", filename], stdout=subprocess.PIPE)
+    cleaned_filename = ""
+    for row in filename_proc.stdout:
+        cleaned_filename = row.decode("utf-8").rstrip()
+    print("cleaned_filename = {}".format(cleaned_filename))
+
 
     # run pathfinder script to get the paths
-    proc = subprocess.Popen(["bash", "pathfinder.sh", filename, size_c, local_homedir], stdout=subprocess.PIPE)
+    proc = subprocess.Popen(["bash", "pathfinder.sh", cleaned_filename, size_c, local_homedir], stdout=subprocess.PIPE)
+
 
     path_list = []
     # extract all the paths pathfinder returns you
