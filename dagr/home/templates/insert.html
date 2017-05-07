@@ -12,14 +12,34 @@
     <div class="w3-container">
         <form action="/upload/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <input type="file" name="file" id="file"/>
+            <input type="file" name="file" id="file" required/>
             <br/>
             <input type="hidden" name="size" id="size_input"/>
+
+            <br/>
+
+            <div id="dagrselectionbox" style="float:left" >
+                Choose Parent
+                <p style="font-style:italic">"If you don't want parent, leave blank"</p>
+                <br/>
+                <select class="js-example-basic-single" id="dagrlist" name="dagr-selection" required>
+                    <option value=" " selected="selected"> </option>
+                    {% for key, value in dagr_list.items %}
+                    <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <br/>
+
             <input type="submit" value="Upload File" id="size"/>
         </form>
     </div>
 
         <script type="text/javascript">
+            $(document).ready(function() {
+                $(".js-example-basic-single").select2();
+            });
             var size;
             // gets the size of the file before upload
             $("#file").on("change", function() {

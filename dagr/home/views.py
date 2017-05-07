@@ -196,7 +196,7 @@ def bulkfiles(directory):
         print("current filename = {}".format(current_filename))
 
         # insert the file's metadata as a DAGR
-        insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner)
+        insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner, '')
 
 
 def bulkdirectory(directory):
@@ -287,38 +287,44 @@ def categorizeSubmission(request):
         print("selected category was = {}".format(category))
         print("selected dagr id was = {}".format(dagrid))
 
-        # make connection to database
-        conn = MySQLdb.connect(host="localhost",
-                               user="root",
-                               passwd="password",
-                               db="Documents")
-        x = conn.cursor()
+        # assign the category to the dagr in Category table
+        assignCategory(category, dagrid)
 
-        x.execute("""SELECT * FROM Categories""")
-
-
-        print("---category table---")
-        dagrwithcat_exists = False
-        for row in x:
-            print("current category = {}".format(row[0]))
-            print("current dagrid = {}".format(row[1]))
-
-            if row[0] == category and row[1] == dagrid:
-                print("this combo already exists! Breaking out of loop!")
-                dagrwithcat_exists = True
-                break
-            print("row = {}".format(row))
-
-        if not dagrwithcat_exists:
-            x.execute(""" INSERT INTO Categories VALUES (%s, %s) """, (category, dagrid))
-            conn.commit()
-            print("new entry inserted into Category table!")
-
-        conn.close()
 
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")
+
+
+def assignCategory(category, dagrid):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    x.execute("""SELECT * FROM Categories""")
+
+    print("---category table---")
+    dagrwithcat_exists = False
+    for row in x:
+        print("current category = {}".format(row[0]))
+        print("current dagrid = {}".format(row[1]))
+
+        if row[0] == category and row[1] == dagrid:
+            print("this combo already exists! Breaking out of loop!")
+            dagrwithcat_exists = True
+            break
+        print("row = {}".format(row))
+
+    if not dagrwithcat_exists:
+        x.execute(""" INSERT INTO Categories VALUES (%s, %s) """, (category, dagrid))
+        conn.commit()
+        print("new entry inserted into Category table!")
+
+    conn.close()
+
 
 
 
@@ -334,6 +340,28 @@ class HtmlParserPageView(TemplateView):
 class InsertPageView(TemplateView):
     template_name = 'insert.html'
 
+def insert(request):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    # submit query for getting all DAGRs
+    x.execute("""SELECT * FROM DAGR""")
+
+    # create dictionary of DAGRs
+    dagr_list = {}
+    for row in x:
+        print("row = {}".format(row))
+        dagr_list[row[0]] = row[1]
+
+    conn.close()
+
+    return render(request, 'insert.html', {'dagr_list': dagr_list})
+
+
 def upload(request):
     if request.method == 'POST':
 
@@ -347,13 +375,17 @@ def upload(request):
         size = request.POST['size']
         local_homedir = request.META['HOME']
 
+        dagrid = request.POST.get('dagr-selection')
+
+        print("selected dagr id was = {}".format(dagrid))
+
 
         print("file = {}".format(file))
 
         # extract all relevant metadata from file
         guid, localpath, lastmod, owner, extract_size = extractLocalMetadata(filename, size, local_homedir)
 
-        insertIntoDB(guid, filename, localpath, size, lastmod, owner)
+        insertIntoDB(guid, filename, localpath, size, lastmod, owner, dagrid)
 
         return HttpResponseRedirect(reverse('success'))
 
@@ -431,7 +463,7 @@ def extractWithPath(localpath):
 
 
 
-def insertIntoDB(guid, filename, localpath, size, lastmod, owner):
+def insertIntoDB(guid, filename, localpath, size, lastmod, owner, parent):
 
     guid = str(guid)
     conn = MySQLdb.connect(host="localhost",
@@ -441,7 +473,7 @@ def insertIntoDB(guid, filename, localpath, size, lastmod, owner):
     x = conn.cursor()
 
     x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """,
-              (guid, filename, localpath, size, lastmod, owner, ' '))
+              (guid, filename, localpath, size, lastmod, owner, parent))
     conn.commit()
     x.execute("""SELECT * FROM DAGR""")
     for row in x:

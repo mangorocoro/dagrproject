@@ -27,7 +27,7 @@
             <div id="dagrselectionbox" style="float:left" >
                 DAGR Selection
                 <br/>
-                <select id="dagrlist" name="dagr-selection" required>
+                <select class="js-example-basic-single" id="dagrlist" name="dagr-selection" required>
                     {% for key, value in dagr_list.items %}
                     <option value="{{ key }}">{{ value }}</option>
                     {% endfor %}
@@ -44,6 +44,10 @@
 
 
     <script type="text/javascript">
+        $(document).ready(function() {
+            $(".js-example-basic-single").select2();
+        });
+
         $("#categorylist").select2({
             tags: true,
             createTag: function (params) {
