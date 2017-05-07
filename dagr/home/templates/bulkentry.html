@@ -11,7 +11,9 @@
 
     <h1 align="center">Bulk Load Files</h1>
     <div class="w3-container">
-        <form action="/bulk/" method="POST" enctype="multipart/form-data">
+        <label for="bulkchooser">Please Select Directory You Want to Bulk Load</label>
+        <p for="bulkchooser" style="font-style:italic">"Do this by choosing a file in the directory you want bulk loaded"</p>
+        <form id="bulkchooser" action="/bulk/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="file" name="file" id="file"/>
             <br/>

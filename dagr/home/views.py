@@ -143,52 +143,11 @@ def bulk(request):
         print("directory of file is = {}".format(directory))
 
 
-        # run file script to get all the files in the current directory
-        proc = subprocess.Popen(["bash", "files.sh", directory], stdout=subprocess.PIPE)
-        print("proc = {}".format(proc))
+        # extract all files from current directory and insert into db
+        bulkfiles(directory)
 
-        file_list_str = ""
-        # extract all the paths pathfinder returns you
-        for row in proc.stdout:
-            file_list_str += row.decode("utf-8").rstrip()
-            print("row.decode = {}".format(row.decode("utf-8")))
-
-        print("file_list_str= {}".format(file_list_str))
-
-        indices = [m.start() for m in re.finditer("/home/", file_list_str)]
-
-        print("indices = {}".format(indices))
-        start, end = tee(indices)
-
-        end.__next__()
-
-        separated_list = [file_list_str[i:j] for i, j in zip_longest(start, end)]
-
-        cleaned_files = []
-        for ele in separated_list:
-            cleaned_files.append(ele.rstrip())
-
-        print("cleaned ={}".format(cleaned_files))
-
-        # insert each of the files into the db
-        for f in cleaned_files:
-            # extract all relevant metadata from file
-            guid, localpath, lastmod, owner, current_file_size = extractWithPath(f)
-            print("localpath = {}".format(localpath))
-            print("current file size = {}".format(current_file_size))
-
-            # process current filename
-            current_filename = {localpath.replace(directory, '').replace('/', '') for x in localpath}
-            print("current filename = {}".format(current_filename))
-
-            # insert the file's metadata as a DAGR
-            insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner)
-
-        
-
-
-
-
+        # travel into any subdirectories and bulk load files there
+        bulkdirectory(directory)
 
 
         return HttpResponseRedirect(reverse('success'))
@@ -197,9 +156,86 @@ def bulk(request):
 
 
 
+def bulkfiles(directory):
+    # run file script to get all the files in the current directory
+    proc = subprocess.Popen(["bash", "files.sh", directory], stdout=subprocess.PIPE)
+    print("proc = {}".format(proc))
+
+    file_list_str = ""
+    # extract all the paths pathfinder returns you
+    for row in proc.stdout:
+        file_list_str += row.decode("utf-8").rstrip()
+        print("row.decode = {}".format(row.decode("utf-8")))
+
+    print("file_list_str= {}".format(file_list_str))
+
+    indices = [m.start() for m in re.finditer("/home/", file_list_str)]
+
+    print("indices = {}".format(indices))
+    start, end = tee(indices)
+
+    end.__next__()
+
+    separated_list = [file_list_str[i:j] for i, j in zip_longest(start, end)]
+
+    cleaned_files = []
+    for ele in separated_list:
+        cleaned_files.append(ele.rstrip())
+
+    print("cleaned ={}".format(cleaned_files))
+
+    # insert each of the files into the db
+    for f in cleaned_files:
+        # extract all relevant metadata from file
+        guid, localpath, lastmod, owner, current_file_size = extractWithPath(f)
+        print("localpath = {}".format(localpath))
+        print("current file size = {}".format(current_file_size))
+
+        # process current filename (get rid of path, just take filename itself)
+        current_filename = {localpath.replace(directory, '').replace('/', '') for x in localpath}
+        print("current filename = {}".format(current_filename))
+
+        # insert the file's metadata as a DAGR
+        insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner)
 
 
+def bulkdirectory(directory):
+    # get list of any sub-directories that may exist in current directory
+    # run directory searcher script to get any sub-directories that may exist in current directory
+    proc = subprocess.Popen(["bash", "directories.sh", directory], stdout=subprocess.PIPE)
+    print("proc = {}".format(proc))
 
+    directory_list_str = ""
+    # extract all the paths pathfinder returns you
+    for row in proc.stdout:
+        directory_list_str += row.decode("utf-8").rstrip()
+        print("row.decode = {}".format(row.decode("utf-8")))
+
+    print("directory_list_str= {}".format(directory_list_str))
+
+    indices = [m.start() for m in re.finditer("/home/", directory_list_str)]
+
+    print("indices = {}".format(indices))
+    start, end = tee(indices)
+
+    end.__next__()
+
+    separated_list = [directory_list_str[i:j] for i, j in zip_longest(start, end)]
+
+    cleaned_directories = []
+    for ele in separated_list:
+        cleaned_directories.append(ele.rstrip())
+
+    print("cleaned ={}".format(cleaned_directories))
+
+    # directories script returns all directories including the current directory.
+    # get rid of the current directory (we don't need it)
+    cleaned_directories = cleaned_directories[1:]
+
+    # for each subdirectory, insert files
+    for d in cleaned_directories:
+        print("d = {}".format(d))
+        bulkfiles(d)
 
 
 class CategorizePageView(TemplateView):
@@ -283,8 +319,6 @@ def categorizeSubmission(request):
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")
-
-
 
 
 
