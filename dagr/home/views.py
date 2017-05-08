@@ -242,11 +242,7 @@ def categorize(request):
     # create dictionary of DAGRs
     dagr_list = {}
     for row in x:
-        print("row = {}".format(row))
         dagr_list[row[0]] = row[1]
-
-
-    print("dagr_list = {}".format(dagr_list))
 
     # submit query for getting all Categories
     y = conn.cursor()
@@ -256,9 +252,7 @@ def categorize(request):
     category_list = {}
 
     for row in y:
-        print("row = {}".format(row))
         category_list[row[0]] = row[1]
-
 
     conn.close()
 
@@ -286,13 +280,9 @@ def keywordSubmission(request):
         keyword = request.POST.get('keyword-selection')
         dagrid = request.POST.get('dagr-selection', None)
 
-        print("selected keyword was = {}".format(keyword))
-        print("selected dagr id was = {}".format(dagrid))
-
         # make sure the dagr with the guid doesn't already have the keyword associated with it
         if not isKeywordDuplicate(dagrid, keyword):
             insertKeywords(dagrid, keyword)
-
 
         return HttpResponseRedirect(reverse('success'))
 
@@ -310,12 +300,8 @@ def assignCategory(category, dagrid):
 
     x.execute("""SELECT * FROM Categories""")
 
-    print("---category table---")
     dagrwithcat_exists = False
     for row in x:
-        print("current category = {}".format(row[0]))
-        print("current dagrid = {}".format(row[1]))
-
         if row[0] == category and row[1] == dagrid:
             print("this combo already exists! Breaking out of loop!")
             dagrwithcat_exists = True
