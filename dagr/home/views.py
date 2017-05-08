@@ -115,7 +115,7 @@ class BulkEntryPageView(TemplateView):
 def bulk(request):
     if request.method == 'POST':
 
-        # let's create a shell script on the local computer!
+        # initialize shell scripts if they are not already created
         # for preparation of local file metadata extraction
         createShellScript()
 
@@ -180,9 +180,9 @@ def bulkfiles(directory):
         # process current filename (get rid of path, just take filename itself)
         current_filename = {localpath.replace(directory, '').replace('/', '') for x in localpath}
 
-
-        # insert the file's metadata as a DAGR
-        insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner, '')
+        # if the file is not a duplicate, insert it
+        if not isDAGRDuplicate(current_filename, localpath):
+            insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner, '')
 
 
 def bulkdirectory(directory):
@@ -324,6 +324,49 @@ class DeletePageView(TemplateView):
 class FindOrphansPageView(TemplateView):
     template_name = 'findorphans.html'
 
+def findorphans(request):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    # submit query for getting all orphans
+    x.execute("""SELECT * FROM DAGR c WHERE c.DocParent = '' """)
+
+    # create list of orphans
+    orphan_list = []
+    for row in x:
+        print("orphan row = {}".format(row))
+        #orphan_list[row[0]] = row[1]
+        orphan_list.append(row)
+
+    # submit query for getting all sterile reports
+    y = conn.cursor()
+    y.execute("""SELECT * FROM DAGR c WHERE c.GUID not in (SELECT DISTINCT a.GUID FROM DAGR a, DAGR b WHERE a.GUID = b.DocParent) """)
+
+    # create list of sterile reports
+    sterile_list = []
+
+    for row in y:
+        sterile_list.append(row)
+
+    # submit query for getting all orphan AND sterile reports
+    z = conn.cursor()
+    z.execute("""SELECT * FROM DAGR c WHERE c.GUID not in (SELECT DISTINCT a.GUID FROM DAGR a, DAGR b WHERE a.GUID = b.DocParent) AND c.DocParent = ''""")
+
+    orphanandsterile_list = []
+    # create list of orphan AND sterile reports
+    for row in z:
+        orphanandsterile_list.append(row)
+
+    conn.close()
+
+    return render(request, 'findorphans.html', {'orphan_list': orphan_list, 'sterile_list': sterile_list, 'orphanandsterile_list': orphanandsterile_list})
+
+
+
 class HtmlParserPageView(TemplateView):
     template_name = 'htmlparser.html'
 
@@ -431,8 +474,9 @@ def isKeywordDuplicate(guid, keyword):
         curr_keyword = row[0]
 
         if guid == curr_guid and keyword == curr_keyword:
+            conn.close()
             return True
-
+    conn.close()
     return False
 
 def isDAGRDuplicate(filename, localpath):
@@ -453,8 +497,9 @@ def isDAGRDuplicate(filename, localpath):
         # localpath in this row
         curr_localpath = row[2]
         if filename == curr_fname and localpath == curr_localpath:
+            conn.close()
             return True
-
+    conn.close()
     return False
 
 

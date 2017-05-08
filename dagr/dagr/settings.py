@@ -101,8 +101,8 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Documents',
-        'USER': 'root',
+        'NAME': 'dagrbase',
+        'USER': 'dagruser',
         'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '',

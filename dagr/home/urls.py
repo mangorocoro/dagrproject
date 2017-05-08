@@ -8,7 +8,6 @@ urlpatterns = [
     url(r'^about/$', views.AboutPageView.as_view(), name='about'),
     url(r'^bulkdataentry/$', views.BulkEntryPageView.as_view(), name='bulkdataentry'),
     url(r'^delete/$', views.DeletePageView.as_view(), name='delete'),
-    url(r'^findorphans/$', views.FindOrphansPageView.as_view(), name='findorphans'),
     url(r'^htmlparser/$', views.HtmlParserPageView.as_view(), name='htmlparser'),
     url(r'^metadataquery/$', views.MetadataQueryPageView.as_view(), name='metadataquery'),
     url(r'^modify/$', views.ModifyPageView.as_view(), name='modify'),
@@ -24,4 +23,5 @@ urlpatterns = [
     url(r'^insert/$', views.insert, name='insert'),
     url(r'^keywordSubmission/$', views.keywordSubmission, name='keywordSubmission'),
     url(r'^keywordPage/$', views.keywordPage, name='keywordPage'),
+    url(r'^findorphans/$', views.findorphans, name='findorphans'),
 ]
