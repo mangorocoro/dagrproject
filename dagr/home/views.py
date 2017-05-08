@@ -125,22 +125,14 @@ def bulk(request):
         size = request.POST['size']
         local_homedir = request.META['HOME']
 
-        print("file = {}".format(file))
-        print("filename = {}".format(filename))
-        print("size = {}".format(size))
-        print("local home directory = {}".format(local_homedir))
 
         # extract all relevant metadata from current file
         guid, localpath, lastmod, owner, extract_size = extractLocalMetadata(filename, size, local_homedir)
 
-        print("localpath = {}".format(localpath))
-        print("filename = {}".format(filename))
 
 
         # get the directory of the file selected for bulk load preparation
         directory = localpath[:-len(filename)]
-
-        print("directory of file is = {}".format(directory))
 
 
         # extract all files from current directory and insert into db
@@ -159,19 +151,15 @@ def bulk(request):
 def bulkfiles(directory):
     # run file script to get all the files in the current directory
     proc = subprocess.Popen(["bash", "files.sh", directory], stdout=subprocess.PIPE)
-    print("proc = {}".format(proc))
 
     file_list_str = ""
     # extract all the paths pathfinder returns you
     for row in proc.stdout:
         file_list_str += row.decode("utf-8").rstrip()
-        print("row.decode = {}".format(row.decode("utf-8")))
 
-    print("file_list_str= {}".format(file_list_str))
 
     indices = [m.start() for m in re.finditer("/home/", file_list_str)]
 
-    print("indices = {}".format(indices))
     start, end = tee(indices)
 
     end.__next__()
@@ -182,18 +170,16 @@ def bulkfiles(directory):
     for ele in separated_list:
         cleaned_files.append(ele.rstrip())
 
-    print("cleaned ={}".format(cleaned_files))
 
     # insert each of the files into the db
     for f in cleaned_files:
         # extract all relevant metadata from file
         guid, localpath, lastmod, owner, current_file_size = extractWithPath(f)
-        print("localpath = {}".format(localpath))
-        print("current file size = {}".format(current_file_size))
+
 
         # process current filename (get rid of path, just take filename itself)
         current_filename = {localpath.replace(directory, '').replace('/', '') for x in localpath}
-        print("current filename = {}".format(current_filename))
+
 
         # insert the file's metadata as a DAGR
         insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner, '')
@@ -374,38 +360,53 @@ def upload(request):
         filename = str(file)
         size = request.POST['size']
         local_homedir = request.META['HOME']
-
         dagrid = request.POST.get('dagr-selection')
+        keywords = request.POST.get('keywords').lower()     # convert everything to lowercase
 
-        print("selected dagr id was = {}".format(dagrid))
-
-
-        print("file = {}".format(file))
+        keyword_list = keywords.split(',')
+        keyword_list = [x.strip() for x in keyword_list]    # strip out leading and trailing whitespace
 
         # extract all relevant metadata from file
         guid, localpath, lastmod, owner, extract_size = extractLocalMetadata(filename, size, local_homedir)
 
         insertIntoDB(guid, filename, localpath, size, lastmod, owner, dagrid)
 
+        # insert each keyword for this dagr
+        for k in keyword_list:
+            insertKeywords(guid, k)
+
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")
+
+def insertKeywords(guid, keyword):
+    guid = str(guid)
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    x.execute(""" INSERT INTO keywords VALUES (%s, %s) """, (keyword, guid))
+    conn.commit()
+
+    x.execute("""SELECT * FROM keywords""")
+    for row in x:
+        print(row)
+    conn.close()
+    print("keywords saved for this dagr!")
 
 
 
 def extractLocalMetadata(filename, size, local_homedir):
 
     size_c = str(size) + "c"
-    print("size_c = {}".format(size_c))
-
-    print("filename is = {}".format(filename))
 
     # clean the filename up
     filename_proc = subprocess.Popen(["bash", "filenamecleanup.sh", filename], stdout=subprocess.PIPE)
     cleaned_filename = ""
     for row in filename_proc.stdout:
         cleaned_filename = row.decode("utf-8").rstrip()
-    print("cleaned_filename = {}".format(cleaned_filename))
 
 
     # run pathfinder script to get the paths
@@ -415,11 +416,8 @@ def extractLocalMetadata(filename, size, local_homedir):
     path_list = []
     # extract all the paths pathfinder returns you
     for row in proc.stdout:
-        print("row of proc.stdout = {}".format(row))
         path_list.append(row.decode("utf-8").rstrip())
-        print("row.decode = {}".format(row.decode("utf-8")))
 
-    print("path_list = {}".format(path_list))
 
     # if there is more than one path in path list, choose the first one
     if len(path_list) != 1:
@@ -429,7 +427,6 @@ def extractLocalMetadata(filename, size, local_homedir):
     else:
         localpath = path_list[0]
 
-    print("local path extracted = {}".format(localpath))
     return extractWithPath(localpath)
 
 
@@ -437,15 +434,11 @@ def extractWithPath(localpath):
     # grab metadata using metadataextractor script
     extractor_output = subprocess.Popen(["bash", "metadataextractor.sh", localpath], stdout=subprocess.PIPE)
 
-    print("extractor output = {}".format(extractor_output))
 
     for row in extractor_output.stdout:
-        print("row.decode = {}".format(row.decode("utf-8").rstrip()))
         extractor_output_combined = row.decode("utf-8")
-        print(extractor_output_combined)
 
     extractor_split = extractor_output_combined.split("^^")
-    print("split array = {}".format(extractor_split))
 
     owner = extractor_split[0]
     lastaccess = extractor_split[1].split('.')[0]
@@ -453,9 +446,6 @@ def extractWithPath(localpath):
     laststatuschange = extractor_split[3].split('.')[0]
     size = extractor_split[4].split('.')[0]
     filename = extractor_split[5].split('.')[0]
-
-    print("owner = {}\nlastaccess = {}\nlastmod = {}\nlaststatuschange = {}\nsize = {}".format(owner, lastaccess, lastmod,
-                                                                                    laststatuschange, size))
 
     guid = uuid.uuid4()
 
@@ -522,9 +512,6 @@ def urlParser(request):
 def metadataqueryresults(request):
     if request.method == "POST":
         # get the search terms, None if nothing entered
-        print("IM A POST LIKE IM SUPPOSED TO BE")
-        print("request.POST = {}".format(request.POST))
-
         guid = str(request.POST.get('guid'))
 
         name = str(request.POST.get('name'))
@@ -536,15 +523,6 @@ def metadataqueryresults(request):
         modtime = str(request.POST.get('modtime'))
         date = str(request.POST.get('date'))
 
-        print("guid = {}".format(guid))
-        print("name = {}".format(name))
-        print("category = {}".format(category))
-        print("path = {}".format(path))
-        print("size = {}".format(size))
-        print("creationtime = {}".format(creationtime))
-        print("creator = {}".format(creator))
-        print("modtime = {}".format(modtime))
-        print("date = {}".format(date))
 
         conn = MySQLdb.connect(host="localhost",
                                user="root",
