@@ -10,16 +10,16 @@
     <h1 align="center">Find Orphans AND/OR Sterile Reports</h1>
     <div class="w3-container">
 
-        <input type="radio" onclick="javascript:sizechoice();" name="rangeselection" id="orphan" checked="checked">
-        <label for="orphan">Orphan</label>
+        <input type="radio" onclick="javascript:displayblocks();" name="rangeselection" id="orphan-radio" checked="checked">
+        <label for="orphan-radio">Orphan</label>
         <br/>
 
-        <input type="radio" onclick="javascript:sizechoice();" name="rangeselection" id="sterile">
-        <label for="sterile">Sterile</label>
+        <input type="radio" onclick="javascript:displayblocks();" name="rangeselection" id="sterile-radio">
+        <label for="sterile-radio">Sterile</label>
         <br/>
 
-        <input type="radio" onclick="javascript:sizechoice();" name="rangeselection" id="orphanandsterile">
-        <label for="orphanandsterile">Orphan and Sterile</label>
+        <input type="radio" onclick="javascript:displayblocks();" name="rangeselection" id="orphanandsterile-radio">
+        <label for="orphanandsterile-radio">Orphan and Sterile</label>
         <br/>
 
         <div id="orphan-container"
@@ -34,18 +34,20 @@
              position: relative;">
 
             {% for orphan in orphan_list %}
-            <div style="background-color: #9697fd;
+            <div id="orphan-div";
+                 style="background-color: #9697fd;
                  color: black;
                  border-radius: 15px;
-                 padding: 40px;
-                 font-size: 150%;
-                 text-align: center">
-                <p> <b>GUID: </b></p> {{ orphan.0 }}
-                <p> <b>Name: </b></p> {{ orphan.1 }}
-                <p> <b>Local Path: </b></p> {{ orphan.2 }}
-                <p> <b>Size (bytes): </b></p> {{ orphan.3 }}
-                <p> <b>Creation Date: </b></p> {{ orphan.4 }}
-                <p> <b>Creator: </b></p> {{ orphan.5 }}
+                 padding: 20px;
+                 font-size: 120%;
+                 text-align: center;
+                 word-wrap: break-word;">
+                <p> <b>GUID: </b> <br/> {{ orphan.0 }}</p>
+                <p> <b>Name: </b> <br/> {{ orphan.1 }}</p>
+                <p> <b>Local Path: </b> <br/> {{ orphan.2 }}</p>
+                <p> <b>Size (bytes): </b> <br/> {{ orphan.3 }}</p>
+                <p> <b>Creation Date: </b> <br/> {{ orphan.4 }}</p>
+                <p> <b>Creator: </b> <br/> {{ orphan.5 }}</p>
 
             </div>
             {% endfor %}
@@ -66,18 +68,20 @@
              position: relative;">
 
             {% for sterile in sterile_list %}
-            <div style="background-color: #9697fd;
+            <div id="sterile-div";
+                 style="background-color: #ffffba;
                  color: black;
                  border-radius: 15px;
-                 padding: 40px;
-                 font-size: 150%;
-                 text-align: center">
-                <p> <b>GUID: </b></p> {{ sterile.0 }}
-                <p> <b>Name: </b></p> {{ sterile.1 }}
-                <p> <b>Local Path: </b></p> {{ sterile.2 }}
-                <p> <b>Size (bytes): </b></p> {{ sterile.3 }}
-                <p> <b>Creation Date: </b></p> {{ sterile.4 }}
-                <p> <b>Creator: </b></p> {{ sterile.5 }}
+                 padding: 20px;
+                 font-size: 120%;
+                 text-align: center;
+                 word-wrap: break-word;">
+                <p> <b>GUID: </b> <br/> {{ sterile.0 }}</p>
+                <p> <b>Name: </b> <br/> {{ sterile.1 }}</p>
+                <p> <b>Local Path: </b> <br/> {{ sterile.2 }}</p>
+                <p> <b>Size (bytes): </b> <br/> {{ sterile.3 }}</p>
+                <p> <b>Creation Date: </b> <br/> {{ sterile.4 }}</p>
+                <p> <b>Creator: </b> <br/> {{ sterile.5 }}</p>
 
             </div>
             {% endfor %}
@@ -98,18 +102,20 @@
              position: relative;">
 
             {% for orphanandsterile in orphanandsterile_list %}
-            <div style="background-color: #9697fd;
+            <div id="orphanandsterile-div";
+                 style="background-color: #baffc9;
                  color: black;
                  border-radius: 15px;
-                 padding: 40px;
-                 font-size: 150%;
-                 text-align: center">
-                <p> <b>GUID: </b></p> {{ orphanandsterile.0 }}
-                <p> <b>Name: </b></p> {{ orphanandsterile.1 }}
-                <p> <b>Local Path: </b></p> {{ orphanandsterile.2 }}
-                <p> <b>Size (bytes): </b></p> {{ orphanandsterile.3 }}
-                <p> <b>Creation Date: </b></p> {{ orphanandsterile.4 }}
-                <p> <b>Creator: </b></p> {{ orphanandsterile.5 }}
+                 padding: 20px;
+                 font-size: 120%;
+                 text-align: center;
+                 word-wrap: break-word;">
+                <p> <b>GUID: </b> <br/> {{ orphanandsterile.0 }}</p>
+                <p> <b>Name: </b> <br/> {{ orphanandsterile.1 }}</p>
+                <p> <b>Local Path: </b> <br/> {{ orphanandsterile.2 }}</p>
+                <p> <b>Size (bytes): </b> <br/> {{ orphanandsterile.3 }}</p>
+                <p> <b>Creation Date: </b> <br/> {{ orphanandsterile.4 }}</p>
+                <p> <b>Creator: </b> <br/> {{ orphanandsterile.5 }}</p>
             </div>
             {% endfor %}
 
@@ -119,29 +125,34 @@
     </div>
 
     <script type="text/javascript">
-        $(document).ready(function() {
-          $(".js-example-basic-single").select2({
-              data : [
-                  {
-                      id: 'value',
-                      text: 'text to display'
-                  },
-              ]
-          });
+        $(document).on("change","input[type=radio]",function(){
+
         });
 
-        function sizechoice() {
-            if(document.getElementById('orphan').checked) {
+        function displayblocks() {
+            if(document.getElementById('orphan-radio').checked) {
+
+                $("#orphan-container").fadeIn();
                 document.getElementById('orphan-container').style.display = 'grid';
+
+
+
                 document.getElementById('sterile-container').style.display = 'none';
                 document.getElementById('orphanandsterile-container').style.display = 'none';
-            } else if (document.getElementById('sterile').checked) {
+
+
+            } else if (document.getElementById('sterile-radio').checked) {
+
+                $("#sterile-container").fadeIn();
                 document.getElementById('sterile-container').style.display = 'grid';
+
                 document.getElementById('orphan-container').style.display = 'none';
                 document.getElementById('orphanandsterile-container').style.display = 'none';
+            } else if (document.getElementById('orphanandsterile-radio').checked) {
 
-            } else if (document.getElementById('orphanandsterile').checked) {
+                $("#orphanandsterile-container").fadeIn();
                 document.getElementById('orphanandsterile-container').style.display = 'grid';
+
                 document.getElementById('orphan-container').style.display = 'none';
                 document.getElementById('sterile-container').style.display = 'none';
             }
