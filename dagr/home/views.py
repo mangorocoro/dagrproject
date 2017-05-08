@@ -281,6 +281,24 @@ def categorizeSubmission(request):
 
     return HttpResponse("Failed")
 
+def keywordSubmission(request):
+    if request.method == 'POST':
+        keyword = request.POST.get('keyword-selection')
+        dagrid = request.POST.get('dagr-selection', None)
+
+        print("selected keyword was = {}".format(keyword))
+        print("selected dagr id was = {}".format(dagrid))
+
+        # make sure the dagr with the guid doesn't already have the keyword associated with it
+        if not isKeywordDuplicate(dagrid, keyword):
+            insertKeywords(dagrid, keyword)
+
+
+        return HttpResponseRedirect(reverse('success'))
+
+    return HttpResponse("Failed")
+
+
 
 def assignCategory(category, dagrid):
     # make connection to database
@@ -369,15 +387,126 @@ def upload(request):
         # extract all relevant metadata from file
         guid, localpath, lastmod, owner, extract_size = extractLocalMetadata(filename, size, local_homedir)
 
-        insertIntoDB(guid, filename, localpath, size, lastmod, owner, dagrid)
+
+        # make sure this file is not already a DAGR. If it ISN'T then allow upload
+
+        # if the file is a duplicate, find it's GUID
+        if isDAGRDuplicate(filename, localpath):
+            guid = findGUID(filename, localpath)
+        else:   # if the file is NOT a duplicate, insert it into the DB
+            insertIntoDB(guid, filename, localpath, size, lastmod, owner, dagrid)
 
         # insert each keyword for this dagr
         for k in keyword_list:
-            insertKeywords(guid, k)
+            # make sure the dagr with the guid doesn't already have the keyword associated with it
+            if not isKeywordDuplicate(guid, k):
+                insertKeywords(guid, k)
 
         return HttpResponseRedirect(reverse('success'))
 
     return HttpResponse("Failed")
+
+
+def findGUID(filename, localpath):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+    # submit query for getting all DAGRs
+    x.execute("""SELECT * FROM DAGR""")
+
+    # go through rows of DAGR table to find guid for the filename
+    for row in x:
+        # filename in this row
+        curr_fname = row[1]
+        # localpath in this row
+        curr_localpath = row[2]
+        if filename == curr_fname and localpath == curr_localpath:
+            return row[0]
+
+
+def isKeywordDuplicate(guid, keyword):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    # submit query for getting all DAGRs
+    x.execute("""SELECT * FROM keywords""")
+
+    for row in x:
+        # guid in this row
+        curr_guid = row[1]
+        # curr keyword
+        curr_keyword = row[0]
+
+        if guid == curr_guid and keyword == curr_keyword:
+            return True
+
+    return False
+
+def isDAGRDuplicate(filename, localpath):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    # submit query for getting all DAGRs
+    x.execute("""SELECT * FROM DAGR""")
+
+    # check to see if the DAGR already exists
+    for row in x:
+        # filename in this row
+        curr_fname = row[1]
+        # localpath in this row
+        curr_localpath = row[2]
+        if filename == curr_fname and localpath == curr_localpath:
+            return True
+
+    return False
+
+
+
+def keywordPage(request):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    # submit query for getting all DAGRs
+    x.execute("""SELECT * FROM DAGR""")
+
+    # create dictionary of DAGRs
+    dagr_list = {}
+    for row in x:
+        print("row = {}".format(row))
+        dagr_list[row[0]] = row[1]
+
+    print("dagr_list = {}".format(dagr_list))
+
+    # submit query for getting all Keywords
+    y = conn.cursor()
+    y.execute("""SELECT DISTINCT * FROM keywords""")
+
+    # create dictionary of keywords
+    keyword_list = {}
+
+    for row in y:
+        print("row = {}".format(row))
+        keyword_list[row[0]] = row[1]
+
+    conn.close()
+
+    return render(request, 'keywordPage.html', {'dagr_list': dagr_list, 'keyword_list': keyword_list})
+
 
 def insertKeywords(guid, keyword):
     guid = str(guid)

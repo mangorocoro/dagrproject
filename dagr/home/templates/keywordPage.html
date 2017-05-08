@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Add Keyword!{% endblock %}</title>
+</head>
+<body>
+
+    {% block pagecontent %}
+    <h1 align="center">Add Keywords to Your DAGR!</h1>
+
+    <div class="w3-container">
+
+        <form action="/keywordSubmission/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div id="keywordselectionbox" style="float:left; padding-right: 100px">
+                Keyword Selection
+                <br/>
+                <p style="font-style: italic">"Or create your own keyword!"</p>
+                <select id="keywordlist"  name="keyword-selection" required>
+                    {% for k in keyword_list %}
+                    <option value="{{ k }}">{{ k }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="dagrselectionbox" style="float:left" >
+                DAGR Selection
+                <br/>
+                <select class="js-example-basic-single" id="dagrlist" name="dagr-selection" required>
+                    {% for key, value in dagr_list.items %}
+                    <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+            <input type="submit" value="Submit" />
+
+        </form>
+    </div>
+
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".js-example-basic-single").select2();
+        });
+
+        $("#keywordlist").select2({
+            tags: true,
+            createTag: function (params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                }
+            },
+            templateResult: function (data) {
+                var $result = $("<span></span>");
+
+            $result.text(data.text);
+
+            if (data.newOption) {
+              $result.append(" <em>(new)</em>");
+            }
+
+            return $result;
+            }
+        });
+
+    </script>
+
+
+
+    {% endblock %}
+
+
+</body>
+</html>

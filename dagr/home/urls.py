@@ -22,4 +22,6 @@ urlpatterns = [
     url(r'^categorizeSubmission/$', views.categorizeSubmission, name='categorizeSubmission'),
     url(r'^bulk/$', views.bulk, name='bulk'),
     url(r'^insert/$', views.insert, name='insert'),
+    url(r'^keywordSubmission/$', views.keywordSubmission, name='keywordSubmission'),
+    url(r'^keywordPage/$', views.keywordPage, name='keywordPage'),
 ]
