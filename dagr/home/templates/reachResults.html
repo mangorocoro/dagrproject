@@ -7,7 +7,7 @@
 </head>
 <body>
     {% block pagecontent %}
-    <h1 align="center">Reach Results for <br/>{% block start %} {{ dagr_name }}: {{dagr_id}} {% endblock %} </b> </h1>
+    <h1 align="center">Reach Results for <br/>{% block start %} {{ dagr_name }} <br/> {{dagr_id}} {% endblock %} </b> </h1>
 
     <br/>
     <div class="w3-container">
@@ -38,6 +38,8 @@
                 <p> <b>Size (bytes): </b> <br/> {{ dagr.3 }}</p>
                 <p> <b>Creation Date: </b> <br/> {{ dagr.4 }}</p>
                 <p> <b>Creator: </b> <br/> {{ dagr.5 }}</p>
+                <p> <b>Parent ID: </b> <br/> {{ dagr.6 }}</p>
+
 
             </div>
             {% endfor %}
