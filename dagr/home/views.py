@@ -321,6 +321,73 @@ def assignCategory(category, dagrid):
 class DeletePageView(TemplateView):
     template_name = 'delete.html'
 
+def delete(request):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    # submit query for getting all DAGRs
+    x.execute("""SELECT * FROM DAGR""")
+
+    # create dictionary of DAGRs
+    dagr_list = {}
+    for row in x:
+        dagr_list[row[0]] = row[1]
+
+    conn.close()
+
+    return render(request, 'delete.html', {'dagr_list': dagr_list})
+
+
+def deleteChoice(request):
+    if request.method == "POST":
+        guid = request.POST.get('dagr-selection')
+
+        # make connection to database
+        conn = MySQLdb.connect(host="localhost",
+                               user="root",
+                               passwd="password",
+                               db="Documents")
+        x = conn.cursor()
+
+        # find the chosen dagr, then delete it
+        x.execute("""DELETE FROM DAGR WHERE GUID = (%s) """, [guid])
+        conn.commit()
+
+        print("dagr deleted")
+
+        # find all keywords that have the guid and delete row associated
+        x.execute("""DELETE FROM keywords WHERE DocId = (%s)""", [guid])
+        conn.commit()
+
+        print("keywords deleted")
+
+        # find all categories that have the guid and delete row associated
+        x.execute("""DELETE FROM Categories WHERE DocId = (%s)""", [guid])
+        conn.commit()
+
+        print("categories deleted")
+
+        # find all Child DAGRs and delete the attribute specifying that it is its parent
+        x.execute("""UPDATE DAGR SET DocParent = '' WHERE GUID = (%s) """, [guid])
+        conn.commit()
+
+        print("children references deleted")
+
+        conn.close()
+
+        return HttpResponseRedirect(reverse('deleteSuccess'))
+
+    return HttpResponse("Failed")
+
+class deleteSuccess(TemplateView):
+    template_name = 'deleteSuccess.html'
+
+
+
 class FindOrphansPageView(TemplateView):
     template_name = 'findorphans.html'
 

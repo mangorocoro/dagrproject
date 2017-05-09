@@ -7,7 +7,6 @@ urlpatterns = [
     url(r'^$', views.HomePageView.as_view(), name='home'),
     url(r'^about/$', views.AboutPageView.as_view(), name='about'),
     url(r'^bulkdataentry/$', views.BulkEntryPageView.as_view(), name='bulkdataentry'),
-    url(r'^delete/$', views.DeletePageView.as_view(), name='delete'),
     url(r'^htmlparser/$', views.HtmlParserPageView.as_view(), name='htmlparser'),
     url(r'^metadataquery/$', views.metadataQueryPage, name='metadataquery'),
     url(r'^modify/$', views.ModifyPageView.as_view(), name='modify'),
@@ -27,4 +26,8 @@ urlpatterns = [
     url(r'^queryresultspage/$', views.QueryResultsPage.as_view(), name='queryresultspage'),
     url(r'^timeRangeQueryResults/$', views.timeRangeQueryResults, name='timeRangeQueryResults'),
     url(r'^timerangedatavis/$', views.TimeRangeDataVis.as_view(), name='timerangedatavis'),
+    url(r'^deleteChoice/$', views.deleteChoice, name='deleteChoice'),
+    url(r'^delete/$', views.delete, name='delete'),
+    url(r'^deleteSuccess/$', views.deleteSuccess.as_view(), name='deleteSuccess'),
+
 ]
