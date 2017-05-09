@@ -15,7 +15,6 @@ from bs4 import BeautifulSoup
 import urllib
 import re
 from itertools import tee, zip_longest
-import shlex
 
 
 def createShellScript():
@@ -667,21 +666,38 @@ def urlParser(request):
     return HttpResponseRedirect(reverse('success'))
 
 
+class QueryResultsPage(TemplateView):
+    template_name = 'queryresultspage.html'
 
 
 def metadataqueryresults(request):
     if request.method == "POST":
         # get the search terms, None if nothing entered
-        guid = str(request.POST.get('guid'))
+        guid = str(request.POST['guid'])
+        path = str(request.POST['path'])
+        creationtime = str(request.POST['creationtime'])
+        modtime = str(request.POST['modtime'])
+        author = str(request.POST['creator'])
+        date = str(request.POST['date'])
+        name = str(request.POST['name'])
+        exsize = str(request.POST['exact-size'])
+        minsize = str(request.POST['min-size'])
+        maxsize = str(request.POST['max-size'])
+        greatsize = str(request.POST['greater-than-size'])
+        lesssize = str(request.POST['less-than-size'])
+        checked = (request.POST['rangeselection'])
+        print(checked)
 
-        name = str(request.POST.get('name'))
-        category = str(request.POST.get('category'))
-        path = str(request.POST.get('path'))
-        size = str(request.POST.get('size'))
-        creationtime = str(request.POST.get('creationtime'))
-        creator = str(request.POST.get('creator'))
-        modtime = str(request.POST.get('modtime'))
-        date = str(request.POST.get('date'))
+        if (exsize != ''):
+            docSizeTester = 'e'
+        elif (minsize != ''):
+            docSizeTester = 'r'
+        elif (greatsize != ''):
+            docSizeTester = 'g'
+        elif (lesssize != ''):
+            docSizeTester = 'l'
+        else:
+            docSizeTester = ''
 
 
         conn = MySQLdb.connect(host="localhost",
@@ -690,14 +706,54 @@ def metadataqueryresults(request):
                                db="Documents")
         x = conn.cursor()
 
-        x.execute("""SELECT * FROM DAGR""")
+        pre = ["GUID = ", "DocName = ", "StorePath = ", "DocCreator = ", "DocParent = "]
+        parameters = [guid, name, path, author]
+        query = ''
+        getAll = False
+        createTimeTester = "e"
+        i = 0
+
+        if (getAll == False):
+            query = ' WHERE'
+            for queries in parameters:
+                if (len(queries) > 0):
+                    query += " " + pre[i] + "\"" + queries + "\"" + " AND"
+                i += 1
+        print(greatsize)
+        print(exsize)
+        print(lesssize)
+        print(minsize)
+        print(docSizeTester)
+        if (docSizeTester != ''):
+            if (docSizeTester == 'g'):
+                query += " DocSize > \"" + greatsize + "\" AND"
+            elif (docSizeTester == 'l'):
+                query += " DocSize < \"" + lesssize + "\" AND"
+            elif (docSizeTester == 'e'):
+                query += " DocSize = \"" + exsize + "\" AND"
+
+        if (creationtime != ''):
+            if (createTimeTester == 'g'):
+                query += " CreateTime > \'" + creationtime + "\' AND"
+            elif (createTimeTester == 'l'):
+                query += " CreateTime < \'" + creationtime + "\' AND"
+            elif (createTimeTester == 'e'):
+                query += " CreateTime = \'" + creationtime + "\' AND"
+
+        query = query[:len(query) - 4]
+        print("query - {}".format(query))
+
+        x.execute("SELECT * FROM DAGR" + query)
+
+        output = x.fetchall()
+        dagr_list = []
         for row in x:
             print(row)
+            dagr_list.append(row)
         conn.close()
 
 
-
-        return HttpResponseRedirect(reverse('success'))
+        return render(request, 'queryresultspage.html', {'dagr_list': dagr_list})
     return HttpResponse("Failed")
 
 

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Query Results{% endblock %}</title>
+</head>
+<body>
+    {% block pagecontent %}
+    <h1 align="center">Metadata Query Results</h1>
+    <div class="w3-container">
+
+        <div id="dagr-results-container"
+             class="wrapper"
+             style="
+             display: grid;
+             grid-template-columns: 20% 20% 20% 20%;
+             grid-gap: 30px;
+             color: #444;
+             height: auto;
+             padding: 10px;
+             position: relative;">
+
+            {% for dagr in dagr_list %}
+            <div id="orphan-div";
+                 style="background-color: #9697fd;
+                 color: black;
+                 border-radius: 15px;
+                 padding: 20px;
+                 font-size: 120%;
+                 text-align: center;
+                 word-wrap: break-word;">
+                <p> <b>GUID: </b> <br/> {{ dagr.0 }}</p>
+                <p> <b>Name: </b> <br/> {{ dagr.1 }}</p>
+                <p> <b>Local Path: </b> <br/> {{ dagr.2 }}</p>
+                <p> <b>Size (bytes): </b> <br/> {{ dagr.3 }}</p>
+                <p> <b>Creation Date: </b> <br/> {{ dagr.4 }}</p>
+                <p> <b>Creator: </b> <br/> {{ dagr.5 }}</p>
+
+            </div>
+            {% endfor %}
+
+
+
+        </div>
+
+
+    </div>
+    {% endblock %}
+</body>
+</html>

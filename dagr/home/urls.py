@@ -24,4 +24,5 @@ urlpatterns = [
     url(r'^keywordSubmission/$', views.keywordSubmission, name='keywordSubmission'),
     url(r'^keywordPage/$', views.keywordPage, name='keywordPage'),
     url(r'^findorphans/$', views.findorphans, name='findorphans'),
+    url(r'^queryresultspage/$', views.QueryResultsPage.as_view(), name='queryresultspage'),
 ]
