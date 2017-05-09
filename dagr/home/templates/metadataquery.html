@@ -14,6 +14,7 @@
             {% csrf_token %}
             <label for="guidlist">GUID: </label>
             <select class="js-example-basic-single" id="guidlist" name="guid">
+                <option label=""></option>
                 {% for dagr in dagr_list %}
                 <option value="{{ dagr.0 }}">{{ dagr.0 }}</option>
                 {% endfor %}
@@ -22,6 +23,7 @@
 
             <label for="namelist">Name: </label>
             <select class="js-example-basic-single" id="namelist" name="name">
+                <option label=""></option>
                 {% for dagr in dagr_list %}
                 <option value="{{ dagr.1 }}">{{ dagr.1 }}</option>
                 {% endfor %}
@@ -30,6 +32,7 @@
 
             <label for="categorylist">Category: </label>
             <select class="js-example-basic-single" id="categorylist"  name="category-selection">
+                <option label=""></option>
                 {% for cat in category_list %}
                 <option value="{{ cat }}">{{ cat }}</option>
                 {% endfor %}
@@ -38,6 +41,7 @@
 
             <label for="keywordlist">Keyword: </label>
             <select class="js-example-basic-single" id="keywordlist"  name="keyword-selection">
+                <option label=""></option>
                 {% for k in keyword_list %}
                 <option value="{{ k }}">{{ k }}</option>
                 {% endfor %}
@@ -48,6 +52,7 @@
 
             <label for="pathlist">Path: </label>
             <select class="js-example-basic-single" id="pathlist" name="path">
+                <option label=""></option>
                 {% for dagr in dagr_list %}
                 <option value="{{ dagr.2 }}">{{ dagr.2 }}</option>
                 {% endfor %}
