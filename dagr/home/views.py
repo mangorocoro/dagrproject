@@ -255,8 +255,9 @@ def categorize(request):
 
     conn.close()
 
-
     return render(request, 'categorize.html', {'dagr_list': dagr_list, 'category_list': category_list})
+
+
 
 def categorizeSubmission(request):
     if request.method == 'POST':
@@ -686,6 +687,8 @@ def metadataqueryresults(request):
         greatsize = str(request.POST['greater-than-size'])
         lesssize = str(request.POST['less-than-size'])
         checked = (request.POST['rangeselection'])
+        category = str(request.POST['category-selection'])
+        keyword = str(request.POST['keyword-selection'])
         print(checked)
 
         if (exsize != ''):
@@ -760,8 +763,47 @@ def metadataqueryresults(request):
 class SuccessView(TemplateView):
     template_name = 'success.html'
 
-class MetadataQueryPageView(TemplateView):
-    template_name = 'metadataquery.html'
+
+def metadataQueryPage(request):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+
+    # submit query for getting all Categories
+    x = conn.cursor()
+    x.execute("""SELECT * FROM Categories""")
+
+    # create dictionary of Categories
+    category_list = {}
+
+    for row in x:
+        category_list[row[0]] = row[1]
+
+    y = conn.cursor()
+    y.execute("""SELECT * FROM keywords""")
+
+    # create dictionary of keywords
+    keyword_list = {}
+
+    for row in y:
+        keyword_list[row[0]] = row[1]
+
+    z = conn.cursor()
+    z.execute("""SELECT * FROM DAGR""")
+
+    # create list of DAGRs
+    dagr_list = []
+
+    for row in z:
+        dagr_list.append(row)
+
+
+    conn.close()
+
+    return render(request, 'metadataquery.html', {'category_list': category_list, 'keyword_list': keyword_list, 'dagr_list': dagr_list})
+
 
 
 class ModifyPageView(TemplateView):

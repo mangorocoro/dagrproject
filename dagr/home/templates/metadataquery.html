@@ -12,20 +12,46 @@
     <div class="w3-container">
         <form action="/metadataqueryresults/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="guid">GUID: </label>
-            <input id="guid" type="text" name="guid" />
+            <label for="guidlist">GUID: </label>
+            <select class="js-example-basic-single" id="guidlist" name="guid">
+                {% for dagr in dagr_list %}
+                <option value="{{ dagr.0 }}">{{ dagr.0 }}</option>
+                {% endfor %}
+            </select>
             <br/>
 
-            <label for="name">Name: </label>
-            <input id="name" type="text" name="name"/>
+            <label for="namelist">Name: </label>
+            <select class="js-example-basic-single" id="namelist" name="name">
+                {% for dagr in dagr_list %}
+                <option value="{{ dagr.1 }}">{{ dagr.1 }}</option>
+                {% endfor %}
+            </select>
             <br/>
 
-            <label for="category">Category: </label>
-            <input id="category" type="text" name=category"/>
+            <label for="categorylist">Category: </label>
+            <select class="js-example-basic-single" id="categorylist"  name="category-selection">
+                {% for cat in category_list %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
             <br/>
 
-            <label for="path">Path: </label>
-            <input id="path" type="text" name="path"/>
+            <label for="keywordlist">Keyword: </label>
+            <select class="js-example-basic-single" id="keywordlist"  name="keyword-selection">
+                {% for k in keyword_list %}
+                <option value="{{ k }}">{{ k }}</option>
+                {% endfor %}
+            </select>
+            <br/>
+
+
+
+            <label for="pathlist">Path: </label>
+            <select class="js-example-basic-single" id="pathlist" name="path">
+                {% for dagr in dagr_list %}
+                <option value="{{ dagr.2 }}">{{ dagr.2 }}</option>
+                {% endfor %}
+            </select>
             <br/>
 
             <label>Size in Bytes: </label>
@@ -79,7 +105,7 @@
             <br/>
 
             <label for="date">Date: </label>
-            <input id="date" type="text" name="date"/>
+            <input id="date" type="date" name="date"/>
             <br/>
 
             <input type="submit" value="Submit" />
@@ -122,20 +148,6 @@
             }
         }
         </script>
-
-        <select class="js-example-basic-single">
-            <option value="dagr1">DAGR 1</option>
-            <option value="dagr2">DAGR 2</option>
-            <option value="dagr3">DAGR 3</option>
-        </select>
-
-        Choose Parent DAGR
-
-        Choose Any Child DAGRs
-
-        <br/>
-
-
 
     </div>
 
