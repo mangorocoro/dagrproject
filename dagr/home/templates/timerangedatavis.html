@@ -3,13 +3,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Query Results{% endblock %}</title>
+    <title>{% block title %}DAGRs in Range{% endblock %}</title>
 </head>
 <body>
     {% block pagecontent %}
-    <h1 align="center">Metadata Query Results</h1>
-    <div class="w3-container">
+    <h1 align="center">DAGRs between {% start %} and {% end %}</h1>
 
+    <div class="w3-container">
         <div id="dagr-results-container"
              class="wrapper"
              style="
@@ -46,6 +46,10 @@
 
 
     </div>
+
+
     {% endblock %}
+
+
 </body>
 </html>

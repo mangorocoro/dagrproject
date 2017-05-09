@@ -814,3 +814,44 @@ class ReachPageView(TemplateView):
 
 class TimeRangePageView(TemplateView):
     template_name = 'timerange.html'
+
+def timeRangeQueryResults(request):
+    if request.method == "POST":
+
+        # daterange value = 12/01/2014 1:30 PM - 01/23/2015 2:00PM
+
+        rangestring = request.POST['daterange']
+        rangestring_parsed = rangestring.split('-')
+
+        start = rangestring_parsed[0]
+        end = rangestring_parsed[1]
+
+        # for now, get rid of times, just keep the date
+        start = start.split(' ')
+        start = start[0]
+
+        end = end.split(' ')
+        end = end[0]
+
+        conn = MySQLdb.connect(host="localhost",
+                               user="root",
+                               passwd="password",
+                               db="Documents")
+        x = conn.cursor()
+
+        x.execute("""
+                  SELECT * 
+                  FROM DAGR 
+                  WHERE DAGR.CreateTime <= STR_TO_DATE('%s', '%%%%Y/%%%%m/%%%%d') AND DAGR.CreateTime >= STR_TO_DATE('%s'. '%%%%Y/%%%%m/%%%%d')""", (end, start))
+
+
+        dagr_list = []
+        for row in x:
+            dagr_list.append(row)
+
+        return render(request, 'timerangedatavis.html', {'dagr_list': dagr_list, 'start': start, 'end': end})
+
+    return HttpResponse("Failed")
+
+class TimeRangeDataVis(TemplateView):
+    template_name = 'timerangedatavis.html'

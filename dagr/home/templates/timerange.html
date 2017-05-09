@@ -11,9 +11,19 @@
     <h1 align="center">Choose a Time Range</h1>
     <div class="w3-container">
         Choose Date Range:
-        <input id="date-range-box"type="text" name="daterange" value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM" />
+        <form id="bulkchooser" action="/timeRangeQueryResults/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input id="date-range-box" type="text" name="daterange" value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM" />
 
-        <script type="text/javascript">
+            <input type="submit" value="Submit" />
+        </form>
+
+
+
+    </div>
+
+
+    <script type="text/javascript">
             $(function() {
                 $('input[name="daterange"]').daterangepicker({
                     timePicker: true,
@@ -34,10 +44,10 @@
                 });
             });
 
+            document.getElementById("date-range-box").submit();
+
 
         </script>
-
-    </div>
 
 
 

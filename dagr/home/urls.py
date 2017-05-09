@@ -25,4 +25,6 @@ urlpatterns = [
     url(r'^keywordPage/$', views.keywordPage, name='keywordPage'),
     url(r'^findorphans/$', views.findorphans, name='findorphans'),
     url(r'^queryresultspage/$', views.QueryResultsPage.as_view(), name='queryresultspage'),
+    url(r'^timeRangeQueryResults/$', views.timeRangeQueryResults, name='timeRangeQueryResults'),
+    url(r'^timerangedatavis/$', views.TimeRangeDataVis.as_view(), name='timerangedatavis'),
 ]
