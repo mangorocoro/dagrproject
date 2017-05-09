@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 import urllib
 import re
 from itertools import tee, zip_longest
+from datetime import datetime
 
 
 def createShellScript():
@@ -743,10 +744,8 @@ def metadataqueryresults(request):
         # get the search terms, None if nothing entered
         guid = str(request.POST['guid'])
         path = str(request.POST['path'])
-        creationtime = str(request.POST['creationtime'])
         modtime = str(request.POST['modtime'])
         author = str(request.POST['creator'])
-        date = str(request.POST['date'])
         name = str(request.POST['name'])
         exsize = str(request.POST['exact-size'])
         minsize = str(request.POST['min-size'])
@@ -802,13 +801,13 @@ def metadataqueryresults(request):
             elif (docSizeTester == 'e'):
                 query += " DocSize = \"" + exsize + "\" AND"
 
-        if (creationtime != ''):
+        if (modtime != ''):
             if (createTimeTester == 'g'):
-                query += " CreateTime > \'" + creationtime + "\' AND"
+                query += " CreateTime > \'" + modtime + "\' AND"
             elif (createTimeTester == 'l'):
-                query += " CreateTime < \'" + creationtime + "\' AND"
+                query += " CreateTime < \'" + modtime + "\' AND"
             elif (createTimeTester == 'e'):
-                query += " CreateTime = \'" + creationtime + "\' AND"
+                query += " CreateTime = \'" + modtime + "\' AND"
 
         query = query[:len(query) - 4]
         print("query - {}".format(query))
@@ -876,8 +875,74 @@ def metadataQueryPage(request):
 class ModifyPageView(TemplateView):
     template_name = 'modify.html'
 
-class ReachPageView(TemplateView):
-    template_name = 'reach.html'
+
+
+def reach(request):
+    # make connection to database
+    conn = MySQLdb.connect(host="localhost",
+                           user="root",
+                           passwd="password",
+                           db="Documents")
+    x = conn.cursor()
+
+    # submit query for getting all DAGRs
+    x.execute("""SELECT * FROM DAGR""")
+
+    # create dictionary of DAGRs
+    dagr_list = {}
+    for row in x:
+        dagr_list[row[0]] = row[1]
+
+    conn.close()
+
+    return render(request, 'reach.html', {'dagr_list': dagr_list})
+
+
+def reachResults(request):
+    if request.method == "POST":
+
+        selected_dagr = request.POST.get('dagr-selection')
+
+        print("selected_dagr = {}".format(selected_dagr))
+
+        # make connection to database
+        conn = MySQLdb.connect(host="localhost",
+                               user="root",
+                               passwd="password",
+                               db="Documents")
+        x = conn.cursor()
+        dagr_list = []
+
+        # submit query for getting selected DAGR
+        x.execute("""SELECT * FROM DAGR c WHERE c.GUID = (%s)""", [selected_dagr])
+
+        selected_dagr_info = x.fetchone()
+
+        print("selected_dagr_info = {}".format(selected_dagr_info))
+
+        # save name and guid
+        dagr_name = selected_dagr_info[1]
+        dagr_id = selected_dagr
+
+        # add the selected DAGR info to the list (add itself to the reach visualization)
+        dagr_list.append(selected_dagr_info)
+
+        # get the parent of the selected DAGR (if any)
+        selected_dagr_parent = selected_dagr_info[6]
+
+        # if the selected DAGR has a parent, then start crawling for its reach
+        while(selected_dagr_parent != ' '):
+            # get the info of the dagr
+            current_dagr_info = x.execute("""SELECT * FROM DAGR c WHERE c.GUID = (%s)""", [selected_dagr_parent])
+            dagr_list.append(current_dagr_info)
+
+            selected_dagr_parent = current_dagr_info[6]
+
+        conn.close()
+
+        return render(request, 'reachResults.html', {'dagr_list': dagr_list, 'dagr_name': dagr_name, 'dagr_id': dagr_id})
+
+    return HttpResponse("Failed")
 
 class TimeRangePageView(TemplateView):
     template_name = 'timerange.html'
@@ -890,15 +955,29 @@ def timeRangeQueryResults(request):
         rangestring = request.POST['daterange']
         rangestring_parsed = rangestring.split('-')
 
-        start = rangestring_parsed[0]
-        end = rangestring_parsed[1]
 
+        start = rangestring_parsed[0].strip()
+        print("start = {}".format(start))
+        startDate = datetime.strptime(start, '%m/%d/%Y %I:%M %p')
+        print("startDate = {}".format(startDate))
+        print("type of startDate = {}".format(type(startDate)))
+
+
+        end = rangestring_parsed[1].strip()
+        print("end = {}".format(end))
+        endDate = datetime.strptime(end, '%m/%d/%Y %I:%M %p')
+        print("endDate = {}".format(endDate))
+        print("type of endDate = {}".format(type(endDate)))
+
+
+        '''
         # for now, get rid of times, just keep the date
         start = start.split(' ')
         start = start[0]
 
         end = end.split(' ')
         end = end[0]
+        '''
 
         conn = MySQLdb.connect(host="localhost",
                                user="root",
@@ -909,7 +988,8 @@ def timeRangeQueryResults(request):
         x.execute("""
                   SELECT * 
                   FROM DAGR 
-                  WHERE DAGR.CreateTime <= STR_TO_DATE('%s', '%%%%Y/%%%%m/%%%%d') AND DAGR.CreateTime >= STR_TO_DATE('%s'. '%%%%Y/%%%%m/%%%%d')""", (end, start))
+                  WHERE DAGR.ModifiedTime <= (%s) AND DAGR.ModifiedTime >= (%s)
+                  """, (endDate, startDate))
 
 
         dagr_list = []

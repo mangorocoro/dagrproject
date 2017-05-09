@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^htmlparser/$', views.HtmlParserPageView.as_view(), name='htmlparser'),
     url(r'^metadataquery/$', views.metadataQueryPage, name='metadataquery'),
     url(r'^modify/$', views.ModifyPageView.as_view(), name='modify'),
-    url(r'^reach/$', views.ReachPageView.as_view(), name='reach'),
+
     url(r'^timerange/$', views.TimeRangePageView.as_view(), name='timerange'),
     url(r'^success/$', views.SuccessView.as_view(), name='success'),
     url(r'^upload/$', views.upload, name='upload'),
@@ -29,5 +29,7 @@ urlpatterns = [
     url(r'^deleteChoice/$', views.deleteChoice, name='deleteChoice'),
     url(r'^delete/$', views.delete, name='delete'),
     url(r'^deleteSuccess/$', views.deleteSuccess.as_view(), name='deleteSuccess'),
+    url(r'^reach/$', views.reach, name='reach'),
+    url(r'^reachResults/$', views.reachResults, name='reachResults'),
 
 ]

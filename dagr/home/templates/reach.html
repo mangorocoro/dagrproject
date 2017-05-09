@@ -6,6 +6,37 @@
     <title>{% block title %}DAGR Reach{% endblock %}</title>
 </head>
 <body>
+    {% block pagecontent %}
+    <h1 align="center">Find Reach of a Specific DAGR!</h1>
+
+    <div class="w3-container">
+        <form action="/reachResults/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div id="dagrselectionbox" style="float:left" >
+                DAGR Selection
+                <br/>
+                <select class="js-example-basic-single" id="dagrlist" name="dagr-selection" required>
+                    {% for key, value in dagr_list.items %}
+                    <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+            <input type="submit" value="Submit" />
+
+        </form>
+
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".js-example-basic-single").select2();
+        });
+
+    </script>
+    {% endblock %}
 
 </body>
 </html>
