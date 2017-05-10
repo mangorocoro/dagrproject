@@ -13,9 +13,19 @@ import subprocess
 import metadata_parser
 from bs4 import BeautifulSoup
 import urllib
+from urllib.request import urlopen
+from socket import timeout
 import re
 from itertools import tee, zip_longest
 from datetime import datetime
+from functools import wraps
+import errno
+import os
+import signal
+from bs4 import BeautifulSoup
+import random
+import string
+from random import shuffle
 
 
 def createShellScript():
@@ -713,26 +723,239 @@ def urlParser(request):
         if not url.startswith(http) or not url.startswith(https):
             url = http + url
 
-        print("url = {}".format(url))
+        #print("url = {}".format(url))
         page = metadata_parser.MetadataParser(url=url, search_head_only=False)
-        print("page = {}".format(page.metadata))
+        #print("page = {}".format(page.metadata))
 
 
-        title = page.get_metadata('title')
+        conn = MySQLdb.connect(host="localhost",
+                               user="root",
+                               passwd="password",
+                               db="Documents")
 
-        description = page.get_metadata('description')
+        parse(url, 0, None, conn)
 
-        id = uuid.uuid4()
 
+
+        return HttpResponseRedirect(reverse('success'))
+    return HttpResponse("Failed")
+
+
+
+#@timeout(2)
+def parse(url, count, par, conn):
+
+    # remove any trailing slashes
+    if url.endswith('/'):
+        url = url[:-1]
+
+    print("incoming url = {}".format(url))
+    http = "http://"
+    https = "https://"
+
+    try:
+        # extract metadata from url
+        page = metadata_parser.MetadataParser(url=url, search_head_only=True)
+    except:
+        print("failed to get page")
+        page = None
+
+    try:
+        # date
         date = page.get_metadata('pubdate')
+        if (date != None):
+            date = date[:10] + " " + date[11:len(date) - 1]
+            sqldate = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+        else:
+            sqldate= None
+    except:
+        print("in except, sqldate = None")
+        sqldate = None
 
-        date = date[:10] + " " + date[11:len(date) - 1]
+    # id
+    id = uuid.uuid4()
 
-        last_modified = page.get_metadata('lastmod')
+    if page != None:
+        # title
+        title = page.get_metadata('title')
+    else:
+        title = None
 
-        last_modified = date[:10] + " " + date[11:len(date) - 1]
 
-    return HttpResponseRedirect(reverse('success'))
+
+    x = conn.cursor()
+
+    if (title != None):
+        x.execute("""SELECT * FROM DAGR WHERE StorePath = '%s'""" % url)
+        duplicateResults = x.fetchall()
+        print("duplicateResults = {}".format(duplicateResults))
+        print("length of duplicate results = {}".format(len(duplicateResults)))
+
+        if len(duplicateResults) == 0:
+            print("no duplicates, so we should insert")
+            print("id = {}, title = {}, url = {}, sqldate = {}, par = {}".format(str(id), page.get_metadata('title'), url, sqldate, par))
+            x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """, (str(id), page.get_metadata('title'), url, '0', sqldate, ' ', par))
+
+            # insert keywords for this DAGR
+            keywords = page.get_metadata('keywords')    # a list of keywords
+            if keywords is not None and len(keywords) > 0:
+                print("keywords = {}".format(keywords))
+                # insert into keywords database
+                #for k in keywords:
+                    #insertKeywords(id, k)
+
+            conn.commit()
+            print("inserted")
+    else:
+        print("Not enough info")
+        x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """, (str(id), url, url, '0', sqldate, ' ', par))
+        conn.commit()
+        print("inserted")
+
+
+    if count < 3:
+        # connect to a URL
+        website = urlopen(url)
+
+
+        # get code
+        status_code = website.getcode()
+        print("status code = {}".format(status_code))
+
+        # read html code
+        html = website.read().decode("utf-8")
+
+        # use re.findall to get all the links
+        links = re.findall('"((http|ftp)s?://.*?)"', html)
+
+        print("links = {}".format(links))
+
+        # shuffle list
+
+
+
+        # prune links list
+        pruned_list = []
+        for link in links[:20]:
+
+            print("link = {}".format(link))
+
+            # strip url of http or https tags for actual comparison of links
+            if url.startswith(https):
+                stripped_url = url[8:]
+                if stripped_url.startswith('www.'):
+                    stripped_url = stripped_url[4:]
+            elif url.startswith(http):
+                stripped_url = url[7:]
+                if stripped_url.startswith('www.'):
+                    stripped_url = stripped_url[4:]
+            else:
+                stripped_url = url
+                if stripped_url.startswith('www.'):
+                    stripped_url = stripped_url[4:]
+
+            # strip link of http or https tags for actual comparison of links
+            if link[0].startswith(https):
+                stripped_link = link[0][8:]
+                if stripped_link.startswith('www.'):
+                    stripped_link = stripped_link[4:]
+            elif link[0].startswith(http):
+                stripped_link = link[0][7:]
+                if stripped_link.startswith('www.'):
+                    stripped_link = stripped_link[4:]
+            else:
+                stripped_link = link[0]
+                if stripped_link.startswith('www.'):
+                    stripped_link = stripped_link[4:]
+
+
+
+            # filter out media files first
+            if stripped_url != stripped_link \
+                    and 'googleusercontent' not in stripped_link\
+                    and not stripped_link.endswith('.js') \
+                    and not stripped_link.endswith('.css') \
+                    and not stripped_link.endswith('.ico') \
+                    and not stripped_link.endswith('.png') \
+                    and not stripped_link.endswith('.jpg') \
+                    and not stripped_link.endswith('.jsp') \
+                    and 'localhost' not in stripped_link:
+
+                statusOK = True
+                # print("current url = {}".format(link[0]))
+                try:
+                    # connect to a URL
+                    curr_website = urlopen(link[0], timeout=5)
+
+                    # get code
+                    curr_status_code = curr_website.getcode()
+                except:
+                    statusOK = False
+                    # print("status is NOT OK")
+
+                    if statusOK:
+                        curr_page = metadata_parser.MetadataParser(url=url, search_head_only=True)
+
+                        curr_page_type = curr_page.get_metadata('Content-Type')
+
+
+                        curr_page_title = curr_page.get_metadata('title')
+
+                        isUnicode = True
+                        if not all(ord(char) < 256 for char in curr_page_title):
+                            isUnicode = False
+                            print("False!")
+
+                        if isUnicode and curr_page_type == 'text/html':
+                            pruned_list.append(link[0])
+
+
+        print("pruned_list = {}".format(pruned_list))
+
+        # choose a random sampling from the pruned list
+        num_pruned = len(pruned_list)
+        print("num pruned = {}".format(num_pruned))
+
+        if num_pruned > 0:
+            rand_indices = random.sample(range(0, num_pruned), 5)
+
+            page_links = [pruned_list[i] for i in rand_indices]
+            print("randomly chosen page links = {}".format(page_links))
+
+            for page_link in page_links:
+                parse(page_link, count + 1, id, conn)
+
+    else:
+        return
+
+
+
+class TimeoutError(Exception):
+    pass
+
+def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wraps(func)(wrapper)
+
+    return decorator
+
+
+
+
+
+
 
 
 class QueryResultsPage(TemplateView):
@@ -957,27 +1180,11 @@ def timeRangeQueryResults(request):
 
 
         start = rangestring_parsed[0].strip()
-        print("start = {}".format(start))
         startDate = datetime.strptime(start, '%m/%d/%Y %I:%M %p')
-        print("startDate = {}".format(startDate))
-        print("type of startDate = {}".format(type(startDate)))
-
 
         end = rangestring_parsed[1].strip()
-        print("end = {}".format(end))
         endDate = datetime.strptime(end, '%m/%d/%Y %I:%M %p')
-        print("endDate = {}".format(endDate))
-        print("type of endDate = {}".format(type(endDate)))
 
-
-        '''
-        # for now, get rid of times, just keep the date
-        start = start.split(' ')
-        start = start[0]
-
-        end = end.split(' ')
-        end = end[0]
-        '''
 
         conn = MySQLdb.connect(host="localhost",
                                user="root",
