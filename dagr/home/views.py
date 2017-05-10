@@ -825,13 +825,15 @@ def parse(url, count, par, conn):
         # read html code
         html = website.read().decode("utf-8")
 
+        website.close()
+
         # use re.findall to get all the links
         links = re.findall('"((http|ftp)s?://.*?)"', html)
 
         print("links = {}".format(links))
 
         # shuffle list
-
+        random.shuffle(links)
 
 
         # prune links list
@@ -887,8 +889,11 @@ def parse(url, count, par, conn):
                     # connect to a URL
                     curr_website = urlopen(link[0], timeout=5)
 
+
                     # get code
                     curr_status_code = curr_website.getcode()
+
+                    curr_website.close()
                 except:
                     statusOK = False
                     # print("status is NOT OK")
