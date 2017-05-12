@@ -44,11 +44,17 @@
                  word-wrap: break-word;">
                 <p> <b>GUID: </b> <br/> {{ orphan.0 }}</p>
                 <p> <b>Name: </b> <br/> {{ orphan.1 }}</p>
-                <p> <b>Local Path: </b> <br/> {{ orphan.2 }}</p>
+                <p> <b>Local Path: </b> <br/>
+                    {% if "http" in orphan.2 or "https" in orphan.2 or "www" in orphan.2 %}
+                        <a href="{{ orphan.2}}">{{orphan.2}}</a>
+                    {% endif %}
+
+                </p>
                 <p> <b>Size (bytes): </b> <br/> {{ orphan.3 }}</p>
                 <p> <b>Modified Date: </b> <br/> {{ orphan.4 }}</p>
                 <p> <b>Creator: </b> <br/> {{ orphan.5 }}</p>
                 <p> <b>Parent ID: </b> <br/> {{ dagr.6 }}</p>
+                <p> <a href="file:////home/dan/Documents/notes">notes</a></p>
 
             </div>
             {% endfor %}

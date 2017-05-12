@@ -13,9 +13,9 @@
         Choose Date Range:
         <form id="bulkchooser" action="/timeRangeQueryResults/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <input id="date-range-box" type="text" name="daterange" value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM" />
+            <input id="date-range-box" type="text" name="daterange" value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM" style="color:black; background-color:white"/>
 
-            <input type="submit" value="Submit" />
+            <input type="submit" value="Submit" style="color:white; background-color:black"/>
         </form>
 
 
@@ -36,11 +36,8 @@
 
             $(function() {
                 $('input[name="daterange"]').on('apply.daterangepicker', function(ev, picker) {
-                    console.log(picker.startDate.format('YYYY-MM-DD h:mm A'));
-                    console.log(picker.endDate.format('YYYY-MM-DD h:mm A'));
                     var startdate = picker.startDate.format('YYYY-MM-DD h:mm A');
                     var enddate = picker.endDate.format('YYYY-MM-DD h:mm A');
-                    alert("start date = " + startdate + "\nend date = " + enddate);
                 });
             });
 

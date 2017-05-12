@@ -13,7 +13,7 @@
         <form action="/metadataqueryresults/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <label for="guidlist">GUID: </label>
-            <select class="js-example-basic-single" id="guidlist" name="guid">
+            <select class="js-example-basic-single" id="guidlist" name="guid" style="color:white; background-color:white">
                 <option label=""></option>
                 {% for dagr in dagr_list %}
                 <option value="{{ dagr.0 }}">{{ dagr.0 }}</option>
@@ -22,7 +22,7 @@
             <br/>
 
             <label for="namelist">Name: </label>
-            <select class="js-example-basic-single" id="namelist" name="name">
+            <select class="js-example-basic-single" id="namelist" name="name" style="color:white; background-color:white">
                 <option label=""></option>
                 {% for dagr in dagr_list %}
                 <option value="{{ dagr.1 }}">{{ dagr.1 }}</option>
@@ -31,7 +31,7 @@
             <br/>
 
             <label for="categorylist">Category: </label>
-            <select class="js-example-basic-single" id="categorylist"  name="category-selection">
+            <select class="js-example-basic-single" id="categorylist"  name="category-selection" style="color:white; background-color:white">
                 <option label=""></option>
                 {% for cat in category_list %}
                 <option value="{{ cat }}">{{ cat }}</option>
@@ -40,7 +40,7 @@
             <br/>
 
             <label for="keywordlist">Keyword: </label>
-            <select class="js-example-basic-single" id="keywordlist"  name="keyword-selection">
+            <select class="js-example-basic-single" id="keywordlist"  name="keyword-selection" style="color:white; background-color:white">
                 <option label=""></option>
                 {% for k in keyword_list %}
                 <option value="{{ k }}">{{ k }}</option>
@@ -51,7 +51,7 @@
 
 
             <label for="pathlist">Path: </label>
-            <select class="js-example-basic-single" id="pathlist" name="path">
+            <select class="js-example-basic-single" id="pathlist" name="path" style="color:white; background-color:white">
                 <option label=""></option>
                 {% for dagr in dagr_list %}
                 <option value="{{ dagr.2 }}">{{ dagr.2 }}</option>
@@ -61,20 +61,20 @@
 
             <label>Size in Bytes: </label>
             <div id="exact-container" style="display:block">
-                <input id="size-input" type="number" name="exact-size" min="0"/>
+                <input id="size-input" type="number" name="exact-size" min="0" style="color:black; background-color:white"/>
             </div>
 
             <div id="range-container" style="display:none">
-                <input id="min-input" type="number" name="min-size" min="0"/>
-                <input id="max-input" type="number" name="max-size" />
+                <input id="min-input" type="number" name="min-size" min="0" style="color:black; background-color:white"/>
+                <input id="max-input" type="number" name="max-size" style="color:black; background-color:white"/>
             </div>
 
             <div id="greater-container" style="display:none">
-                <input id="greater-input" type="number" name="greater-than-size" min="0"/>
+                <input id="greater-input" type="number" name="greater-than-size" min="0" style="color:black; background-color:white"/>
             </div>
 
             <div id="less-container" style="display:none">
-                <input id="less-input" type="number" name="less-than-size" min="0"/>
+                <input id="less-input" type="number" name="less-than-size" min="0" style="color:black; background-color:white"/>
             </div>
 
 
@@ -98,27 +98,47 @@
             <br/>
 
             <label for="creator">Creator: </label>
-            <input id="creator" type="text" name="creator"/>
+            <input id="creator" type="text" name="creator" style="color:black; background-color:white"/>
             <br/>
 
             <label for="modtime">Modification Time: </label>
-            <input id="modtime" type="datetime-local" name="modtime"/>
+            <input id="modtime" type="text" name="datefilter" value="" style="color:black; background-color:white"/>
             <br/>
 
-            <input type="submit" value="Submit" />
+
+
+            <input type="hidden" name="size-selection" id="size-selection"/>
+
+            <input type="submit" value="Submit" style="color:white; background-color:black"/>
         </form>
 
         <script type="text/javascript">
-        $(document).ready(function() {
-          $(".js-example-basic-single").select2({
-              data : [
-                  {
-                      id: 'value',
-                      text: 'text to display'
-                  },
-              ]
-          });
-        });
+
+            $(document).ready(function() {
+                $(".js-example-basic-single").select2();
+            });
+
+
+            $(function() {
+
+              $('input[name="datefilter"]').daterangepicker({
+                  autoUpdateInput: false,
+                  locale: {
+                      cancelLabel: 'Clear'
+                  }
+              });
+
+              $('input[name="datefilter"]').on('apply.daterangepicker', function(ev, picker) {
+                  $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+              });
+
+              $('input[name="datefilter"]').on('cancel.daterangepicker', function(ev, picker) {
+                  $(this).val('');
+              });
+
+            });
+
+
 
         function sizechoice() {
             if(document.getElementById('exact').checked) {
@@ -126,24 +146,56 @@
                 document.getElementById('range-container').style.display = 'none';
                 document.getElementById('greater-container').style.display = 'none';
                 document.getElementById('less-container').style.display = 'none';
+
+                document.getElementById('size-selection').value = 'exact';
+
             } else if (document.getElementById('range').checked) {
                 document.getElementById('range-container').style.display = 'block';
                 document.getElementById('exact-container').style.display = 'none';
                 document.getElementById('greater-container').style.display = 'none';
                 document.getElementById('less-container').style.display = 'none';
+                document.getElementById('size-selection').value = 'range';
 
             } else if (document.getElementById('greaterthan').checked) {
                 document.getElementById('greater-container').style.display = 'block';
                 document.getElementById('exact-container').style.display = 'none';
                 document.getElementById('range-container').style.display = 'none';
                 document.getElementById('less-container').style.display = 'none';
+                document.getElementById('size-selection').value = 'greaterthan';
             } else if (document.getElementById('lessthan').checked) {
                 document.getElementById('less-container').style.display = 'block';
                 document.getElementById('range-container').style.display = 'none';
                 document.getElementById('greater-container').style.display = 'none';
                 document.getElementById('exact-container').style.display = 'none';
+                document.getElementById('size-selection').value = 'lessthan';
             }
         }
+
+
+
+
+        $(function() {
+                $('input[name="modtime"]').daterangepicker({
+                    timePicker: true,
+                    timePickerIncrement: 1,
+                    locale: {
+                        format: 'MM/DD/YYYY h:mm A'
+                    }
+                });
+            });
+
+            $(function() {
+                $('input[name="modtime"]').on('apply.daterangepicker', function(ev, picker) {
+                    var startdate = picker.startDate.format('YYYY-MM-DD h:mm A');
+                    var enddate = picker.endDate.format('YYYY-MM-DD h:mm A');
+                });
+            });
+
+            document.getElementById("date-range-box").submit();
+
+
+
+
         </script>
 
     </div>

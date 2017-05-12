@@ -28,6 +28,11 @@ import string
 from random import shuffle
 
 
+conn = MySQLdb.connect(host="localhost",
+                               user="root",
+                               passwd="password",
+                               db="Documents")
+
 def createShellScript():
 
     # if filenamecleanup script doesn't already exist, make it
@@ -625,12 +630,22 @@ def insertKeywords(guid, keyword):
                            db="Documents")
     x = conn.cursor()
 
-    x.execute(""" INSERT INTO keywords VALUES (%s, %s) """, (keyword, guid))
-    conn.commit()
 
     x.execute("""SELECT * FROM keywords""")
+
+    dagrwithkey_exists = False
     for row in x:
-        print(row)
+        if row[0] == keyword and row[1] == guid:
+            print("this combo already exists! Breaking out of loop!")
+            dagrwithkey_exists = True
+            break
+        print("row = {}".format(row))
+
+    if not dagrwithkey_exists:
+        x.execute(""" INSERT INTO keywords VALUES (%s, %s) """, (keyword, guid))
+        conn.commit()
+        print("new entry inserted into jeywords table!")
+
     conn.close()
     print("keywords saved for this dagr!")
 
@@ -723,17 +738,9 @@ def urlParser(request):
         if not url.startswith(http) or not url.startswith(https):
             url = http + url
 
-        #print("url = {}".format(url))
         page = metadata_parser.MetadataParser(url=url, search_head_only=False)
-        #print("page = {}".format(page.metadata))
 
-
-        conn = MySQLdb.connect(host="localhost",
-                               user="root",
-                               passwd="password",
-                               db="Documents")
-
-        parse(url, 0, None, conn)
+        parse(url, 0, '')
 
 
 
@@ -741,12 +748,12 @@ def urlParser(request):
     return HttpResponse("Failed")
 
 
-
-#@timeout(2)
-def parse(url, count, par, conn):
-
+def parse(url, count, par):
+    x = conn.cursor()
     # remove any trailing slashes
     if url.endswith('/'):
+        url = url[:-1]
+    if url.endswith('\\'):
         url = url[:-1]
 
     print("incoming url = {}".format(url))
@@ -755,10 +762,12 @@ def parse(url, count, par, conn):
 
     try:
         # extract metadata from url
-        page = metadata_parser.MetadataParser(url=url, search_head_only=True)
+        page = metadata_parser.MetadataParser(url=url, search_head_only=True, requests_timeout=5)
     except:
         print("failed to get page")
         page = None
+
+    print("get page")
 
     try:
         # date
@@ -767,10 +776,12 @@ def parse(url, count, par, conn):
             date = date[:10] + " " + date[11:len(date) - 1]
             sqldate = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
         else:
-            sqldate= None
+            sqldate = None
     except:
         print("in except, sqldate = None")
         sqldate = None
+
+    print("got date")
 
     # id
     id = uuid.uuid4()
@@ -781,158 +792,80 @@ def parse(url, count, par, conn):
     else:
         title = None
 
-
-
-    x = conn.cursor()
-
-    if (title != None):
+    if (title != None and len(url) < 255):
         x.execute("""SELECT * FROM DAGR WHERE StorePath = '%s'""" % url)
-        duplicateResults = x.fetchall()
+        duplicateResults = x.fetchone()
         print("duplicateResults = {}".format(duplicateResults))
-        print("length of duplicate results = {}".format(len(duplicateResults)))
 
-        if len(duplicateResults) == 0:
+        if duplicateResults == None:
             print("no duplicates, so we should insert")
-            print("id = {}, title = {}, url = {}, sqldate = {}, par = {}".format(str(id), page.get_metadata('title'), url, sqldate, par))
-            x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """, (str(id), page.get_metadata('title'), url, '0', sqldate, ' ', par))
+            try:
+                print(
+                    "id = {}, title = {}, url = {}, sqldate = {}, par = {}".format(str(id), page.get_metadata('title'),
+                                                                                   url, sqldate, str(par)))
+                x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """,
+                          (str(id), page.get_metadata('title'), url, '0', sqldate, url, str(par)))
+                conn.commit()
+                # insert keywords for this DAGR
+                keywords = page.get_metadata('keywords')  # a list of keywords
+                if keywords is not None and len(keywords) > 0:
+                    keywords_list = keywords.split(', ')
+                    # insert into keywords database
+                    for k in keywords_list:
+                        insertKeywords(id, k)
+                print("inserted")
+            except:
+                print("ascii prob")
+        else:
+            id = duplicateResults[0]
 
-            # insert keywords for this DAGR
-            keywords = page.get_metadata('keywords')    # a list of keywords
-            if keywords is not None and len(keywords) > 0:
-                print("keywords = {}".format(keywords))
-                # insert into keywords database
-                #for k in keywords:
-                    #insertKeywords(id, k)
-
-            conn.commit()
-            print("inserted")
     else:
         print("Not enough info")
-        x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """, (str(id), url, url, '0', sqldate, ' ', par))
-        conn.commit()
-        print("inserted")
 
-
-    if count < 3:
+    if count < 2:
         # connect to a URL
-        website = urlopen(url)
+        try:
+            website = urlopen(url, timeout=5)
+        except:
+            print("404")
+            website = "404 FUCK"
 
+        if (website != "404 FUCK"):
+            # get code
+            status_code = website.getcode()
+            print("status code = {}".format(status_code))
 
-        # get code
-        status_code = website.getcode()
-        print("status code = {}".format(status_code))
+            # read html code
+            try:
+                html = website.read().decode("utf-8")
+            except:
+                print("Not html")
+                html = "FUCK"
 
-        # read html code
-        html = website.read().decode("utf-8")
+            website.close()
 
-        website.close()
+            # use re.findall to get all the links
+            if html != "FUCK":
+                links = re.findall('"((http|ftp)s?://.*?)"', html)
 
-        # use re.findall to get all the links
-        links = re.findall('"((http|ftp)s?://.*?)"', html)
+                # print("links = {}".format(links))
 
-        print("links = {}".format(links))
+                # shuffle list
+                random.shuffle(links)
 
-        # shuffle list
-        random.shuffle(links)
+                # prune links list
+                pruned_list = []
+                for link in links[:10]:
+                    print("link = {}".format(link))
 
-
-        # prune links list
-        pruned_list = []
-        for link in links[:20]:
-
-            print("link = {}".format(link))
-
-            # strip url of http or https tags for actual comparison of links
-            if url.startswith(https):
-                stripped_url = url[8:]
-                if stripped_url.startswith('www.'):
-                    stripped_url = stripped_url[4:]
-            elif url.startswith(http):
-                stripped_url = url[7:]
-                if stripped_url.startswith('www.'):
-                    stripped_url = stripped_url[4:]
+                    parse(link[0], count + 1, id)
             else:
-                stripped_url = url
-                if stripped_url.startswith('www.'):
-                    stripped_url = stripped_url[4:]
-
-            # strip link of http or https tags for actual comparison of links
-            if link[0].startswith(https):
-                stripped_link = link[0][8:]
-                if stripped_link.startswith('www.'):
-                    stripped_link = stripped_link[4:]
-            elif link[0].startswith(http):
-                stripped_link = link[0][7:]
-                if stripped_link.startswith('www.'):
-                    stripped_link = stripped_link[4:]
-            else:
-                stripped_link = link[0]
-                if stripped_link.startswith('www.'):
-                    stripped_link = stripped_link[4:]
-
-
-
-            # filter out media files first
-            if stripped_url != stripped_link \
-                    and 'googleusercontent' not in stripped_link\
-                    and not stripped_link.endswith('.js') \
-                    and not stripped_link.endswith('.css') \
-                    and not stripped_link.endswith('.ico') \
-                    and not stripped_link.endswith('.png') \
-                    and not stripped_link.endswith('.jpg') \
-                    and not stripped_link.endswith('.jsp') \
-                    and 'localhost' not in stripped_link:
-
-                statusOK = True
-                # print("current url = {}".format(link[0]))
-                try:
-                    # connect to a URL
-                    curr_website = urlopen(link[0], timeout=5)
-
-
-                    # get code
-                    curr_status_code = curr_website.getcode()
-
-                    curr_website.close()
-                except:
-                    statusOK = False
-                    # print("status is NOT OK")
-
-                    if statusOK:
-                        curr_page = metadata_parser.MetadataParser(url=url, search_head_only=True)
-
-                        curr_page_type = curr_page.get_metadata('Content-Type')
-
-
-                        curr_page_title = curr_page.get_metadata('title')
-
-                        isUnicode = True
-                        if not all(ord(char) < 256 for char in curr_page_title):
-                            isUnicode = False
-                            print("False!")
-
-                        if isUnicode and curr_page_type == 'text/html':
-                            pruned_list.append(link[0])
-
-
-        print("pruned_list = {}".format(pruned_list))
-
-        # choose a random sampling from the pruned list
-        num_pruned = len(pruned_list)
-        print("num pruned = {}".format(num_pruned))
-
-        if num_pruned > 0:
-            rand_indices = random.sample(range(0, num_pruned), 5)
-
-            page_links = [pruned_list[i] for i in rand_indices]
-            print("randomly chosen page links = {}".format(page_links))
-
-            for page_link in page_links:
-                parse(page_link, count + 1, id, conn)
+                print(html)
+        else:
+            print(website)
 
     else:
         return
-
 
 
 class TimeoutError(Exception):
@@ -961,8 +894,6 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 
 
 
-
-
 class QueryResultsPage(TemplateView):
     template_name = 'queryresultspage.html'
 
@@ -972,7 +903,7 @@ def metadataqueryresults(request):
         # get the search terms, None if nothing entered
         guid = str(request.POST['guid'])
         path = str(request.POST['path'])
-        modtime = str(request.POST['modtime'])
+        modtime = str(request.POST['datefilter'])
         author = str(request.POST['creator'])
         name = str(request.POST['name'])
         exsize = str(request.POST['exact-size'])
@@ -983,18 +914,32 @@ def metadataqueryresults(request):
         checked = (request.POST['rangeselection'])
         category = str(request.POST['category-selection'])
         keyword = str(request.POST['keyword-selection'])
-        print(checked)
 
-        if (exsize != ''):
-            docSizeTester = 'e'
-        elif (minsize != ''):
-            docSizeTester = 'r'
-        elif (greatsize != ''):
+        size_selection = str(request.POST['size-selection'])
+
+
+        print("modtime = {}".format(modtime))
+
+        if modtime != '':
+            # daterange value = 12/01/2014 1:30 PM - 01/23/2015 2:00PM
+            rangestring_parsed = modtime.split('-')
+
+            start = rangestring_parsed[0].strip()
+            startDate = str(datetime.strptime(start, '%m/%d/%Y %I:%M %p'))
+
+            end = rangestring_parsed[1].strip()
+            endDate = str(datetime.strptime(end, '%m/%d/%Y %I:%M %p'))
+
+
+        docSizeTester = ''
+        if size_selection == 'exact':
             docSizeTester = 'g'
-        elif (lesssize != ''):
+        elif size_selection == 'range':
+            docSizeTester = 'r'
+        elif size_selection == 'lessthan':
             docSizeTester = 'l'
-        else:
-            docSizeTester = ''
+        elif size_selection == 'greaterthan':
+            docSizeTester = 'g'
 
 
         conn = MySQLdb.connect(host="localhost",
@@ -1016,26 +961,22 @@ def metadataqueryresults(request):
                 if (len(queries) > 0):
                     query += " " + pre[i] + "\"" + queries + "\"" + " AND"
                 i += 1
-        print(greatsize)
-        print(exsize)
-        print(lesssize)
-        print(minsize)
-        print(docSizeTester)
+
         if (docSizeTester != ''):
             if (docSizeTester == 'g'):
-                query += " DocSize > \"" + greatsize + "\" AND"
+                query += " DocSize >= \"" + greatsize + "\" AND"
             elif (docSizeTester == 'l'):
-                query += " DocSize < \"" + lesssize + "\" AND"
+                query += " DocSize <= \"" + lesssize + "\" AND"
             elif (docSizeTester == 'e'):
                 query += " DocSize = \"" + exsize + "\" AND"
+            elif docSizeTester == 'r':
+                query += " DocSize >= \"" + minsize + "\" AND DocSize <= \"" + maxsize + "\" AND"
 
         if (modtime != ''):
-            if (createTimeTester == 'g'):
-                query += " CreateTime > \'" + modtime + "\' AND"
-            elif (createTimeTester == 'l'):
-                query += " CreateTime < \'" + modtime + "\' AND"
-            elif (createTimeTester == 'e'):
-                query += " CreateTime = \'" + modtime + "\' AND"
+            query += " ModifiedTime >= \"" + startDate + "\" AND ModifiedTime <= \"" + endDate + "\" AND"
+
+
+
 
         query = query[:len(query) - 4]
         print("query - {}".format(query))
@@ -1044,9 +985,28 @@ def metadataqueryresults(request):
 
         output = x.fetchall()
         dagr_list = []
-        for row in x:
+        for row in output:
             print(row)
             dagr_list.append(row)
+
+        if keyword != '':
+            keyquery = " WHERE Keyword = \"" + keyword + "\""
+            # search for keywords
+            x.execute("SELECT * FROM keywords" + keyquery)
+
+            dagrs_from_keywords = [y[1] for y in x.fetchall()]
+
+            dagr_list =[i for i in dagr_list if i[0] in dagrs_from_keywords]
+
+        if category != '':
+            catquery = " WHERE Category = \"" + category + "\""
+            # search for categories
+            x.execute("SELECT * FROM Categories" + catquery)
+
+            dagrs_from_categories = [y[1] for y in x.fetchall()]
+
+            dagr_list = [i for i in dagr_list if i[0] in dagrs_from_categories]
+
         conn.close()
 
 
@@ -1159,18 +1119,34 @@ def reachResults(request):
         selected_dagr_parent = selected_dagr_info[6]
 
         # if the selected DAGR has a parent, then start crawling for its reach
-        while(selected_dagr_parent != ' '):
+        while(selected_dagr_parent != ''):
             # get the info of the dagr
-            current_dagr_info = x.execute("""SELECT * FROM DAGR c WHERE c.GUID = (%s)""", [selected_dagr_parent])
+            x.execute("""SELECT * FROM DAGR c WHERE c.GUID = (%s)""", [selected_dagr_parent])
+            current_dagr_info = x.fetchone()
             dagr_list.append(current_dagr_info)
 
+            print("current_dagr_info = {}".format(current_dagr_info))
+
             selected_dagr_parent = current_dagr_info[6]
+            dagr_list = addChildren(dagr_list, dagr_id)
+
+
+
+
 
         conn.close()
 
         return render(request, 'reachResults.html', {'dagr_list': dagr_list, 'dagr_name': dagr_name, 'dagr_id': dagr_id})
 
     return HttpResponse("Failed")
+
+def addChildren(list, id):
+    x = conn.cursor()
+    x.execute("""SELECT * FROM DAGR c WHERE c.DocParent = (%s)""", [id])
+    for row in x:
+        list.append(row)
+        list = addChildren(list, row[0])
+    return list
 
 class TimeRangePageView(TemplateView):
     template_name = 'timerange.html'

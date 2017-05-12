@@ -17,9 +17,9 @@
             <div id="categoryselectionbox" style="float:left; padding-right: 100px">
                 Category Selection
                 <br/>
-                <select id="categorylist"  name="category-selection">
+                <select id="categorylist"  name="category-selection" style="color:black; background-color:white; width:200px">
                     {% for cat in category_list %}
-                    <option value="{{ cat }}">{{ cat }}</option>
+                    <option value="{{ cat }}" style="color:black; background-color:white">{{ cat }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -35,7 +35,7 @@
             </div>
 
 
-            <input type="submit" value="Submit" />
+            <input type="submit" value="Submit" style="color:white; background-color:black"/>
 
         </form>
     </div>
