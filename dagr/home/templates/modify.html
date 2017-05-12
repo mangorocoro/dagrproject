@@ -7,5 +7,61 @@
 </head>
 <body>
 
+    {% block pagecontent %}
+    <h1 align="center">Modify the DAGRs</h1>
+
+    <div class="w3-container">
+
+        <form action="/modifySubmission/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div id="guidselectionbox" style="float:left; padding-right: 100px">
+                DAGR Selection
+                <br/>
+                <select id="idlist"  name="guid" style="color:black; background-color:white; width:800px" required>
+                    <option label=""></option>
+                	{% for dagr in dagr_list %}
+               		 <option value="{{ dagr.0 }}">{{ dagr.0 }} - {{ dagr.1}}</option>
+                	{% endfor %}
+                </select>
+            </div>
+
+            <br/>
+            <input type="submit" value="Edit" style="color:white; background-color:black"/>
+        </form>
+
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".js-example-basic-single").select2();
+        });
+
+        $("#idlist").select2({
+            tags: true,
+            createTag: function (params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                }
+            },
+            templateResult: function (data) {
+                var $result = $("<span></span>");
+
+            $result.text(data.text);
+
+            if (data.newOption) {
+              $result.append(" <em>(new)</em>");
+            }
+
+            return $result;
+            }
+        });
+
+    </script>
+
+    {% endblock %}
+
+
 </body>
 </html>

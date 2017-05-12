@@ -9,8 +9,6 @@ urlpatterns = [
     url(r'^bulkdataentry/$', views.BulkEntryPageView.as_view(), name='bulkdataentry'),
     url(r'^htmlparser/$', views.HtmlParserPageView.as_view(), name='htmlparser'),
     url(r'^metadataquery/$', views.metadataQueryPage, name='metadataquery'),
-    url(r'^modify/$', views.ModifyPageView.as_view(), name='modify'),
-
     url(r'^timerange/$', views.TimeRangePageView.as_view(), name='timerange'),
     url(r'^success/$', views.SuccessView.as_view(), name='success'),
     url(r'^upload/$', views.upload, name='upload'),
@@ -31,5 +29,11 @@ urlpatterns = [
     url(r'^deleteSuccess/$', views.deleteSuccess.as_view(), name='deleteSuccess'),
     url(r'^reach/$', views.reach, name='reach'),
     url(r'^reachResults/$', views.reachResults, name='reachResults'),
-
+    url(r'^categorizeDelete/$', views.categorizeDelete, name='categorizeDelete'),
+    url(r'^modify/$', views.ModifyPageView, name='modify'),
+    url(r'^modifySubmission/$', views.modifySubmission, name='modifySubmission'),
+    url(r'^modified/$', views.modified, name='modified'),
+    url(r'^editSuccess/$', views.editSuccess.as_view(), name='editSuccess'),
+    url(r'^categorizeSuccess/$', views.categorizeSuccess.as_view(), name='categorizeSuccess'),
+    url(r'^keywordSuccess/$', views.keywordSuccess.as_view(), name='keywordSuccess'),
 ]

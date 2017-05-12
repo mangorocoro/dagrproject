@@ -47,6 +47,8 @@
                 <p> <b>Local Path: </b> <br/>
                     {% if "http" in orphan.2 or "https" in orphan.2 or "www" in orphan.2 %}
                         <a href="{{ orphan.2}}">{{orphan.2}}</a>
+                    {% else %}
+                        {{ orphan.2}}
                     {% endif %}
 
                 </p>
@@ -85,7 +87,13 @@
                  word-wrap: break-word;">
                 <p> <b>GUID: </b> <br/> {{ sterile.0 }}</p>
                 <p> <b>Name: </b> <br/> {{ sterile.1 }}</p>
-                <p> <b>Local Path: </b> <br/> {{ sterile.2 }}</p>
+                <p> <b>Local Path: </b> <br/>
+                    {% if "http" in sterile.2 or "https" in sterile.2 or "www" in sterile.2 %}
+                        <a href="{{ sterile.2}}">{{sterile.2}}</a>
+                    {% else %}
+                        {{ sterile.2}}
+                    {% endif %}
+                </p>
                 <p> <b>Size (bytes): </b> <br/> {{ sterile.3 }}</p>
                 <p> <b>Modified Date: </b> <br/> {{ sterile.4 }}</p>
                 <p> <b>Creator: </b> <br/> {{ sterile.5 }}</p>
@@ -120,7 +128,14 @@
                  word-wrap: break-word;">
                 <p> <b>GUID: </b> <br/> {{ orphanandsterile.0 }}</p>
                 <p> <b>Name: </b> <br/> {{ orphanandsterile.1 }}</p>
-                <p> <b>Local Path: </b> <br/> {{ orphanandsterile.2 }}</p>
+                <p> <b>Local Path: </b> <br/>
+                    {% if "http" in orphanandsterile.2 or "https" in orphanandsterile.2 or "www" in orphanandsterile.2 %}
+                        <a href="{{ orphanandsterile.2}}">{{orphanandsterile.2}}</a>
+                    {% else %}
+                        {{ orphanandsterile.2}}
+                    {% endif %}
+
+                </p>
                 <p> <b>Size (bytes): </b> <br/> {{ orphanandsterile.3 }}</p>
                 <p> <b>Modified Date: </b> <br/> {{ orphanandsterile.4 }}</p>
                 <p> <b>Creator: </b> <br/> {{ orphanandsterile.5 }}</p>

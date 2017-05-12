@@ -59,6 +59,11 @@
             </select>
             <br/>
 
+
+            <label for="filetype">File Type: </label>
+            <input id="filetype" type="text" name="typ" style="color:black; background-color:white"><br>
+            <br/>
+
             <label>Size in Bytes: </label>
             <div id="exact-container" style="display:block">
                 <input id="size-input" type="number" name="exact-size" min="0" style="color:black; background-color:white"/>
@@ -102,7 +107,7 @@
             <br/>
 
             <label for="modtime">Modification Time: </label>
-            <input id="modtime" type="text" name="datefilter" value="" style="color:black; background-color:white"/>
+            <input id="modtime" type="text" name="modtime" value="" style="color:black; background-color:white"/>
             <br/>
 
 
@@ -121,21 +126,31 @@
 
             $(function() {
 
-              $('input[name="datefilter"]').daterangepicker({
-                  autoUpdateInput: false,
-                  locale: {
-                      cancelLabel: 'Clear'
-                  }
-              });
+                  $('input[name="modtime"]').daterangepicker({
+                      timePicker: true,
+                      timePickerIncrement: 1,
+                      autoUpdateInput: false,
+                      locale: {
+                          cancelLabel: 'Clear',
+                          format: 'MM/DD/YYYY h:mm A'
+                      }
+                  });
 
-              $('input[name="datefilter"]').on('apply.daterangepicker', function(ev, picker) {
-                  $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
-              });
+                  $('input[name="modtime"]').on('apply.daterangepicker', function(ev, picker) {
+                      $(this).val(picker.startDate.format('MM/DD/YYYY h:mm A') + ' - ' + picker.endDate.format('MM/DD/YYYY h:mm A'));
+                  });
 
-              $('input[name="datefilter"]').on('cancel.daterangepicker', function(ev, picker) {
-                  $(this).val('');
-              });
+                  $('input[name="modtime"]').on('cancel.daterangepicker', function(ev, picker) {
+                      $(this).val('');
+                  });
 
+                });
+
+            $(function() {
+                $('input[name="modtime"]').on('apply.daterangepicker', function(ev, picker) {
+                    var startdate = picker.startDate.format('YYYY-MM-DD h:mm A');
+                    var enddate = picker.endDate.format('YYYY-MM-DD h:mm A');
+                });
             });
 
 
@@ -173,25 +188,6 @@
 
 
 
-
-        $(function() {
-                $('input[name="modtime"]').daterangepicker({
-                    timePicker: true,
-                    timePickerIncrement: 1,
-                    locale: {
-                        format: 'MM/DD/YYYY h:mm A'
-                    }
-                });
-            });
-
-            $(function() {
-                $('input[name="modtime"]').on('apply.daterangepicker', function(ev, picker) {
-                    var startdate = picker.startDate.format('YYYY-MM-DD h:mm A');
-                    var enddate = picker.endDate.format('YYYY-MM-DD h:mm A');
-                });
-            });
-
-            document.getElementById("date-range-box").submit();
 
 
 

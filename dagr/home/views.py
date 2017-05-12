@@ -172,51 +172,55 @@ def bulkfiles(directory):
     for row in proc.stdout:
         file_list_str += row.decode("utf-8").rstrip()
 
+    if file_list_str != "":
+        indices = [m.start() for m in re.finditer("/home/", file_list_str)]
 
-    indices = [m.start() for m in re.finditer("/home/", file_list_str)]
+        start, end = tee(indices)
 
-    start, end = tee(indices)
+        print("file list string = {}".format(file_list_str))
+        print("indices = {}".format(indices))
 
-    end.__next__()
+        end.__next__()
 
-    separated_list = [file_list_str[i:j] for i, j in zip_longest(start, end)]
+        separated_list = [file_list_str[i:j] for i, j in zip_longest(start, end)]
 
-    cleaned_files = []
-    for ele in separated_list:
-        cleaned_files.append(ele.rstrip())
-
-
-    # insert each of the files into the db
-    for f in cleaned_files:
-        # extract all relevant metadata from file
-        guid, localpath, lastmod, owner, current_file_size = extractWithPath(f)
+        cleaned_files = []
+        for ele in separated_list:
+            cleaned_files.append(ele.rstrip())
 
 
-        # process current filename (get rid of path, just take filename itself)
-        current_filename = {localpath.replace(directory, '').replace('/', '') for x in localpath}
+        print("cleaned files = {}".format(cleaned_files))
 
-        # if the file is not a duplicate, insert it
-        if not isDAGRDuplicate(current_filename, localpath):
-            insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner, '')
+        # insert each of the files into the db
+        for f in cleaned_files:
+            # extract all relevant metadata from file
+            guid, localpath, lastmod, owner, current_file_size = extractWithPath(f)
+
+
+            # process current filename (get rid of path, just take filename itself)
+            current_filename = {localpath.replace(directory, '').replace('/', '') for x in localpath}
+
+            # if the file is not a duplicate, insert it
+            if not isDAGRDuplicate(current_filename, localpath):
+                insertIntoDB(guid, current_filename, localpath, current_file_size, lastmod, owner, '')
 
 
 def bulkdirectory(directory):
     # get list of any sub-directories that may exist in current directory
     # run directory searcher script to get any sub-directories that may exist in current directory
     proc = subprocess.Popen(["bash", "directories.sh", directory], stdout=subprocess.PIPE)
-    print("proc = {}".format(proc))
 
     directory_list_str = ""
     # extract all the paths pathfinder returns you
     for row in proc.stdout:
         directory_list_str += row.decode("utf-8").rstrip()
-        print("row.decode = {}".format(row.decode("utf-8")))
+        #print("row.decode = {}".format(row.decode("utf-8")))
 
-    print("directory_list_str= {}".format(directory_list_str))
+    #print("directory_list_str= {}".format(directory_list_str))
 
     indices = [m.start() for m in re.finditer("/home/", directory_list_str)]
 
-    print("indices = {}".format(indices))
+    #print("indices = {}".format(indices))
     start, end = tee(indices)
 
     end.__next__()
@@ -227,7 +231,7 @@ def bulkdirectory(directory):
     for ele in separated_list:
         cleaned_directories.append(ele.rstrip())
 
-    print("cleaned ={}".format(cleaned_directories))
+    #print("cleaned ={}".format(cleaned_directories))
 
     # directories script returns all directories including the current directory.
     # get rid of the current directory (we don't need it)
@@ -235,8 +239,9 @@ def bulkdirectory(directory):
 
     # for each subdirectory, insert files
     for d in cleaned_directories:
-        print("d = {}".format(d))
         bulkfiles(d)
+        bulkdirectory(d)
+
 
 
 class CategorizePageView(TemplateView):
@@ -280,16 +285,19 @@ def categorizeSubmission(request):
         category = request.POST.get('category-selection')
         dagrid = request.POST.get('dagr-selection', None)
 
-        print("selected category was = {}".format(category))
-        print("selected dagr id was = {}".format(dagrid))
+        #print("selected category was = {}".format(category))
+        #print("selected dagr id was = {}".format(dagrid))
 
         # assign the category to the dagr in Category table
         assignCategory(category, dagrid)
 
 
-        return HttpResponseRedirect(reverse('success'))
+        return HttpResponseRedirect(reverse('categorizeSuccess'))
 
     return HttpResponse("Failed")
+
+
+
 
 def keywordSubmission(request):
     if request.method == 'POST':
@@ -300,7 +308,7 @@ def keywordSubmission(request):
         if not isKeywordDuplicate(dagrid, keyword):
             insertKeywords(dagrid, keyword)
 
-        return HttpResponseRedirect(reverse('success'))
+        return HttpResponseRedirect(reverse('keywordSuccess'))
 
     return HttpResponse("Failed")
 
@@ -319,19 +327,28 @@ def assignCategory(category, dagrid):
     dagrwithcat_exists = False
     for row in x:
         if row[0] == category and row[1] == dagrid:
-            print("this combo already exists! Breaking out of loop!")
+            #print("this combo already exists! Breaking out of loop!")
             dagrwithcat_exists = True
             break
-        print("row = {}".format(row))
+        #print("row = {}".format(row))
 
     if not dagrwithcat_exists:
         x.execute(""" INSERT INTO Categories VALUES (%s, %s) """, (category, dagrid))
         conn.commit()
-        print("new entry inserted into Category table!")
+        #print("new entry inserted into Category table!")
 
     conn.close()
 
 
+def categorizeDelete(request):
+    if request.method == 'POST':
+        category = request.POST.get('category-selection')
+        x = conn.cursor()
+        x.execute("DELETE FROM Categories WHERE Category = \""+category+"\"")
+        conn.commit()
+        conn.close()
+        return HttpResponseRedirect(reverse('deleteSuccess'))
+    return HttpResponse("Failed")
 
 
 class DeletePageView(TemplateView):
@@ -373,25 +390,25 @@ def deleteChoice(request):
         x.execute("""DELETE FROM DAGR WHERE GUID = (%s) """, [guid])
         conn.commit()
 
-        print("dagr deleted")
+        #print("dagr deleted")
 
         # find all keywords that have the guid and delete row associated
         x.execute("""DELETE FROM keywords WHERE DocId = (%s)""", [guid])
         conn.commit()
 
-        print("keywords deleted")
+        #print("keywords deleted")
 
         # find all categories that have the guid and delete row associated
         x.execute("""DELETE FROM Categories WHERE DocId = (%s)""", [guid])
         conn.commit()
 
-        print("categories deleted")
+        #print("categories deleted")
 
         # find all Child DAGRs and delete the attribute specifying that it is its parent
         x.execute("""UPDATE DAGR SET DocParent = '' WHERE GUID = (%s) """, [guid])
         conn.commit()
 
-        print("children references deleted")
+        #print("children references deleted")
 
         conn.close()
 
@@ -402,6 +419,16 @@ def deleteChoice(request):
 class deleteSuccess(TemplateView):
     template_name = 'deleteSuccess.html'
 
+
+class editSuccess(TemplateView):
+    template_name = 'editSuccess.html'
+
+
+class categorizeSuccess(TemplateView):
+    template_name = 'categorizeSuccess.html'
+
+class keywordSuccess(TemplateView):
+    template_name = 'keywordSuccess.html'
 
 
 class FindOrphansPageView(TemplateView):
@@ -644,7 +671,7 @@ def insertKeywords(guid, keyword):
     if not dagrwithkey_exists:
         x.execute(""" INSERT INTO keywords VALUES (%s, %s) """, (keyword, guid))
         conn.commit()
-        print("new entry inserted into jeywords table!")
+        print("new entry inserted into keywords table!")
 
     conn.close()
     print("keywords saved for this dagr!")
@@ -719,10 +746,8 @@ def insertIntoDB(guid, filename, localpath, size, lastmod, owner, parent):
               (guid, filename, localpath, size, lastmod, owner, parent))
     conn.commit()
     x.execute("""SELECT * FROM DAGR""")
-    for row in x:
-        print(row)
     conn.close()
-    print("dagr created from metadata!")
+    #print("dagr created from metadata!")
 
 
 
@@ -756,7 +781,7 @@ def parse(url, count, par):
     if url.endswith('\\'):
         url = url[:-1]
 
-    print("incoming url = {}".format(url))
+    #print("incoming url = {}".format(url))
     http = "http://"
     https = "https://"
 
@@ -764,10 +789,9 @@ def parse(url, count, par):
         # extract metadata from url
         page = metadata_parser.MetadataParser(url=url, search_head_only=True, requests_timeout=5)
     except:
-        print("failed to get page")
         page = None
 
-    print("get page")
+
 
     try:
         # date
@@ -778,10 +802,9 @@ def parse(url, count, par):
         else:
             sqldate = None
     except:
-        print("in except, sqldate = None")
         sqldate = None
 
-    print("got date")
+
 
     # id
     id = uuid.uuid4()
@@ -795,10 +818,8 @@ def parse(url, count, par):
     if (title != None and len(url) < 255):
         x.execute("""SELECT * FROM DAGR WHERE StorePath = '%s'""" % url)
         duplicateResults = x.fetchone()
-        print("duplicateResults = {}".format(duplicateResults))
 
         if duplicateResults == None:
-            print("no duplicates, so we should insert")
             try:
                 print(
                     "id = {}, title = {}, url = {}, sqldate = {}, par = {}".format(str(id), page.get_metadata('title'),
@@ -827,25 +848,22 @@ def parse(url, count, par):
         try:
             website = urlopen(url, timeout=5)
         except:
-            print("404")
-            website = "404 FUCK"
+            website = "404"
 
-        if (website != "404 FUCK"):
+        if (website != "404"):
             # get code
             status_code = website.getcode()
-            print("status code = {}".format(status_code))
 
             # read html code
             try:
                 html = website.read().decode("utf-8")
             except:
-                print("Not html")
-                html = "FUCK"
+                html = "HMM"
 
             website.close()
 
             # use re.findall to get all the links
-            if html != "FUCK":
+            if html != "HMM":
                 links = re.findall('"((http|ftp)s?://.*?)"', html)
 
                 # print("links = {}".format(links))
@@ -856,8 +874,6 @@ def parse(url, count, par):
                 # prune links list
                 pruned_list = []
                 for link in links[:10]:
-                    print("link = {}".format(link))
-
                     parse(link[0], count + 1, id)
             else:
                 print(html)
@@ -903,7 +919,7 @@ def metadataqueryresults(request):
         # get the search terms, None if nothing entered
         guid = str(request.POST['guid'])
         path = str(request.POST['path'])
-        modtime = str(request.POST['datefilter'])
+        modtime = str(request.POST['modtime'])
         author = str(request.POST['creator'])
         name = str(request.POST['name'])
         exsize = str(request.POST['exact-size'])
@@ -914,11 +930,9 @@ def metadataqueryresults(request):
         checked = (request.POST['rangeselection'])
         category = str(request.POST['category-selection'])
         keyword = str(request.POST['keyword-selection'])
-
+        typ = str(request.POST['typ'])
         size_selection = str(request.POST['size-selection'])
 
-
-        print("modtime = {}".format(modtime))
 
         if modtime != '':
             # daterange value = 12/01/2014 1:30 PM - 01/23/2015 2:00PM
@@ -975,11 +989,12 @@ def metadataqueryresults(request):
         if (modtime != ''):
             query += " ModifiedTime >= \"" + startDate + "\" AND ModifiedTime <= \"" + endDate + "\" AND"
 
-
+        if (typ != ''):
+            query += " StorePath like \"%." + typ + "%\" AND"
 
 
         query = query[:len(query) - 4]
-        print("query - {}".format(query))
+
 
         x.execute("SELECT * FROM DAGR" + query)
 
@@ -1062,6 +1077,53 @@ def metadataQueryPage(request):
 
 class ModifyPageView(TemplateView):
     template_name = 'modify.html'
+
+
+def ModifyPageView(request):
+    x = conn.cursor()
+    x.execute("SELECT * FROM DAGR")
+    return render(request, 'modify.html', {'dagr_list': x.fetchall})
+
+
+def modifySubmission(request):
+    if request.method == "POST":
+        guid = str(request.POST['guid'])
+
+        x = conn.cursor()
+        x.execute("SELECT * FROM DAGR WHERE GUID = \"" + guid + "\"")
+        dagr = x.fetchone()
+
+        dagr_time = str(dagr[4])
+
+
+        return render(request, 'modifyDAGR.html', {'dagr': dagr, 'dagr_time': dagr_time})
+    return HttpResponse("Failed")
+
+
+def modified(request):
+    if request.method == "POST":
+        path = str(request.POST['path'])
+        time = str(request.POST['time'])
+        author = str(request.POST['creator'])
+        name = str(request.POST['name'])
+        size = str(request.POST['size'])
+        parent = str(request.POST['parent'])
+        guid = str(request.POST['guid'])
+
+        if time == 'None':
+            time = None
+
+
+        x = conn.cursor()
+        x.execute("""DELETE FROM DAGR WHERE GUID = (%s)""", [guid])
+        conn.commit()
+
+        x.execute(""" INSERT INTO DAGR VALUES (%s, %s, %s, %s, %s, %s, %s) """,
+                  (guid, name, path, size, time, author, parent))
+        conn.commit()
+        return HttpResponseRedirect(reverse('editSuccess'))
+    return HttpResponse("Failed")
+
 
 
 

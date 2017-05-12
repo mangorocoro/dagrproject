@@ -34,10 +34,41 @@
                 </select>
             </div>
 
-
+            <br/>
             <input type="submit" value="Submit" style="color:white; background-color:black"/>
 
         </form>
+    </div>
+
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <h1 align="center">Delete A Category!</h1>
+
+    <div class="w3-container" style="width:50%; margin:0 auto">
+
+        <form action="/categorizeDelete/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div id="categorydelectionbox" style="float:left; padding-right: 100px">
+                Category Selection
+                <br/>
+                <select id="categorylistdelete"  name="category-selection" style="color:black; background-color:white; width:200px">
+                    {% for cat in category_list %}
+                    <option value="{{ cat }}" style="color:black; background-color:white">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <br/>
+            <input type="submit" value="Delete Category" style="color:white; background-color:black"/>
+
+        </form>
+
+
+
+
+
     </div>
 
 
@@ -49,6 +80,28 @@
         });
 
         $("#categorylist").select2({
+            tags: true,
+            createTag: function (params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                }
+            },
+            templateResult: function (data) {
+                var $result = $("<span></span>");
+
+            $result.text(data.text);
+
+            if (data.newOption) {
+              $result.append(" <em>(new)</em>");
+            }
+
+            return $result;
+            }
+        });
+
+        $("#categorylistdelete").select2({
             tags: true,
             createTag: function (params) {
                 return {

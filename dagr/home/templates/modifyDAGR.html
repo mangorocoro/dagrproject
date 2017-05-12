@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Modify this DAGR{% endblock %}</title>
+</head>
+<body>
+
+    {% block pagecontent %}
+
+    <h1 align="center">Modify this DAGR</h1>
+    <div class="w3-container">
+        <form action="/modified/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label for="name">Name: </label>
+            <input id="name" type="text" name="name" value="{{ dagr.1 }}" style="color:black; background-color:white"/>
+            <br/>
+
+            <label for="path">Path: </label>
+            <input id="path" type="text" name="path" value="{{ dagr.2 }}" style="color:black; background-color:white"/>
+            <br/>
+
+            <label>Size in Bytes: </label>
+            <input id="size" type="number" name="size" value="{{ dagr.3 }}" style="color:black; background-color:white"/>
+            <br/>
+
+            <label for="creator">Creator: </label>
+            <input id="creator" type="text" name="creator" value="{{ dagr.5 }}" style="color:black; background-color:white"/>
+            <br/>
+
+            <label for="time">Modification Time: </label>
+            <input id="time" type="datetime" name="time" value="{{ dagr_time }}" style="color:black; background-color:white"/>
+            <br/>
+
+            <input id="parent" type="hidden" name="parent" value="{{ dagr.6 }}" style="color:black; background-color:white; width:350px"/>
+            <br/>
+
+
+            <input type="hidden" name="guid" id="guid" value="{{ dagr.0 }}"/>
+
+            <input type="submit" value="Submit" style="color:white; background-color:black"/>
+        </form>
+
+
+    </div>
+
+
+
+    {% endblock %}
+
+
+</body>
+</html>

@@ -33,7 +33,13 @@
                  word-wrap: break-word;">
                 <p> <b>GUID: </b> <br/> {{ dagr.0 }}</p>
                 <p> <b>Name: </b> <br/> {{ dagr.1 }}</p>
-                <p> <b>Local Path: </b> <br/> {{ dagr.2 }}</p>
+                <p> <b>Local Path: </b> <br/>
+                    {% if "http" in dagr.2 or "https" in dagr.2 or "www" in dagr.2 %}
+                        <a href="{{ dagr.2}}">{{dagr.2}}</a>
+                    {% else %}
+                        {{ dagr.2}}
+                    {% endif %}
+                </p>
                 <p> <b>Size (bytes): </b> <br/> {{ dagr.3 }}</p>
                 <p> <b>Modified Date: </b> <br/> {{ dagr.4 }}</p>
                 <p> <b>Creator: </b> <br/> {{ dagr.5 }}</p>
